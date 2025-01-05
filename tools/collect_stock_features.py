@@ -5,7 +5,6 @@ import csv
 
 import mysql.connector
 
-from helpers.industry import name2id as industry_name2id
 from helpers.utils import get_codes
 
 HEADER = [
@@ -104,7 +103,7 @@ class ExportCodeData(object):
                         list_row[1] = (
                             t_date[0:4] + "-" + t_date[4:6] + "-" + t_date[6:8]
                         )
-                        list_row.append(codes[code][1])
+                        list_row.append(codes[code][0])
                         writer.writerow(list_row)
 
 
