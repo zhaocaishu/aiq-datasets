@@ -12,7 +12,7 @@ def readme():
 
 
 setup(
-    name="datasets",
+    name="aiq-datasets",
     packages=find_packages(exclude=(
         'tests',
         'tools',
