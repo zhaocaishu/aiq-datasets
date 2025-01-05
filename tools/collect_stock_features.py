@@ -121,7 +121,7 @@ if __name__ == "__main__":
         "-user", type=str, default="zcs", help="The user name of database"
     )
     parser.add_argument(
-        "-passwd", type=str, default="2025zcsdaydayup!", help="The password of database"
+        "-passwd", type=str, default="2025zcsdaydayup", help="The password of database"
     )
 
     args = parser.parse_args()
