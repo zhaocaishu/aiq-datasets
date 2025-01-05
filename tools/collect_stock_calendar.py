@@ -14,8 +14,9 @@ class ExportCodeData(object):
 
     def __init_db(self, host, user, passwd):
         """init db, and show tables"""
-        self.connection = mysql.connector.connect(host=host, user=user, passwd=passwd,
-                                                  database="stock_info")
+        self.connection = mysql.connector.connect(
+            host=host, user=user, passwd=passwd, database="stock_info"
+        )
 
         with self.connection.cursor() as cursor:
             cursor.execute("SHOW TABLES")
@@ -24,7 +25,7 @@ class ExportCodeData(object):
                 print(table)
 
     def export_data(self, save_dir):
-        """ 导出数据到文件
+        """导出数据到文件
         Args:
             save_dir: 导出到目录
         """
@@ -35,39 +36,45 @@ class ExportCodeData(object):
         # 从数据库导出数据
         with self.connection.cursor() as cursor:
             # 查询数据
-            query = "SELECT DISTINCT exchange, date_format(cal_date, '%Y-%m-%d') " \
-                    "FROM ts_basic_trade_cal WHERE is_open=1"
+            query = (
+                "SELECT DISTINCT exchange, date_format(cal_date, '%Y-%m-%d') "
+                "FROM ts_basic_trade_cal WHERE is_open=1"
+            )
 
             print(query)
 
             cursor.execute(query)
 
-            with open('%s/calendars/days.csv' % save_dir, 'w', newline='') as csvfile:
-                writer = csv.writer(csvfile, delimiter=',',
-                                    quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            with open(
+                "%s/calendars/calendar.csv" % save_dir, "w", newline=""
+            ) as csvfile:
+                writer = csv.writer(
+                    csvfile, delimiter=",", quotechar="|", quoting=csv.QUOTE_MINIMAL
+                )
                 writer.writerow(HEADER)
 
                 for row in cursor:
                     list_row = list(row)
                     exchange = list_row[0]
-                    if exchange == 'SSE':
-                        exchange = 'SH'
-                    elif exchange == 'SZSE':
-                        exchange = 'SZ'
-                    else:
-                        raise ValueError('Unsupported exchange type')
                     trade_date = list_row[1]
                     writer.writerow([exchange, trade_date])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     """主程序，解析参数，并执行相关的命令"""
-    parser = argparse.ArgumentParser(description='获取全部交易日期')
-    parser.add_argument('-save_dir', required=True, type=str,
-                        help='Directory of the files')
-    parser.add_argument('-host', type=str, default='127.0.0.1', help='The address of database')
-    parser.add_argument('-user', type=str, default='zcs', help='The user name of database')
-    parser.add_argument('-passwd', type=str, default='mydaydayup2023!', help='The password of database')
+    parser = argparse.ArgumentParser(description="获取全部交易日期")
+    parser.add_argument(
+        "-save_dir", required=True, type=str, help="Directory of the files"
+    )
+    parser.add_argument(
+        "-host", type=str, default="127.0.0.1", help="The address of database"
+    )
+    parser.add_argument(
+        "-user", type=str, default="zcs", help="The user name of database"
+    )
+    parser.add_argument(
+        "-passwd", type=str, default="2025zcsdaydayup", help="The password of database"
+    )
 
     args = parser.parse_args()
 

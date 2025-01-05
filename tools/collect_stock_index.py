@@ -7,7 +7,7 @@ import mysql.connector
 
 from helpers.utils import get_codes
 
-HEADER = ["Symbol", "Date", "Ind_class", "List_date"]
+HEADER = ["Instrument", "Date", "Ind_class", "List_date"]
 
 
 class ExportCodeData(object):
@@ -16,8 +16,9 @@ class ExportCodeData(object):
 
     def __init_db(self, host, user, passwd):
         """init db, and show tables"""
-        self.connection = mysql.connector.connect(host=host, user=user, passwd=passwd,
-                                                  database="stock_info")
+        self.connection = mysql.connector.connect(
+            host=host, user=user, passwd=passwd, database="stock_info"
+        )
 
         with self.connection.cursor() as cursor:
             cursor.execute("SHOW TABLES")
@@ -40,34 +41,49 @@ class ExportCodeData(object):
         # 从数据库导出数据
         with self.connection.cursor() as cursor:
             # 查询数据
-            if index_name == 'csi100':
-                query = "SELECT DISTINCT ts_code, trade_date FROM ts_idx_index_weight " \
-                        "WHERE index_code='000903.SH'"
-            elif index_name == 'csi300':
-                query = "SELECT DISTINCT ts_code, trade_date FROM ts_idx_index_weight " \
-                        "WHERE index_code='000300.SH'"
-            elif index_name == 'csi500':
-                query = "SELECT DISTINCT ts_code, trade_date FROM ts_idx_index_weight " \
-                        "WHERE index_code='000905.SH'"
-            elif index_name == 'csi1000':
-                query = "SELECT DISTINCT ts_code, trade_date FROM ts_idx_index_weight " \
-                        "WHERE index_code='000852.SH'"
-            elif index_name == 'sh300':
-                query = "SELECT DISTINCT ts_code, trade_date FROM ts_idx_index_weight " \
-                        "WHERE index_code='000300.SH'"
-            elif index_name == 'szzs':
-                query = "SELECT DISTINCT ts_code, trade_date FROM ts_idx_index_weight " \
-                        "WHERE index_code='399001.SZ'"
+            if index_name == "csi100":
+                query = (
+                    "SELECT DISTINCT ts_code, trade_date FROM ts_idx_index_weight "
+                    "WHERE index_code='000903.SH'"
+                )
+            elif index_name == "csi300":
+                query = (
+                    "SELECT DISTINCT ts_code, trade_date FROM ts_idx_index_weight "
+                    "WHERE index_code='000300.SH'"
+                )
+            elif index_name == "csi500":
+                query = (
+                    "SELECT DISTINCT ts_code, trade_date FROM ts_idx_index_weight "
+                    "WHERE index_code='000905.SH'"
+                )
+            elif index_name == "csi1000":
+                query = (
+                    "SELECT DISTINCT ts_code, trade_date FROM ts_idx_index_weight "
+                    "WHERE index_code='000852.SH'"
+                )
+            elif index_name == "sh300":
+                query = (
+                    "SELECT DISTINCT ts_code, trade_date FROM ts_idx_index_weight "
+                    "WHERE index_code='000300.SH'"
+                )
+            elif index_name == "szzs":
+                query = (
+                    "SELECT DISTINCT ts_code, trade_date FROM ts_idx_index_weight "
+                    "WHERE index_code='399001.SZ'"
+                )
             else:
-                raise ValueError('Unknown index name')
+                raise ValueError("Unknown index name")
 
             print(query)
 
             cursor.execute(query)
 
-            with open('%s/instruments/%s.csv' % (save_dir, index_name), 'w', newline='') as csvfile:
-                writer = csv.writer(csvfile, delimiter=',',
-                                    quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            with open(
+                "%s/instruments/%s.csv" % (save_dir, index_name), "w", newline=""
+            ) as csvfile:
+                writer = csv.writer(
+                    csvfile, delimiter=",", quotechar="|", quoting=csv.QUOTE_MINIMAL
+                )
                 writer.writerow(HEADER)
 
                 for row in cursor:
@@ -75,25 +91,37 @@ class ExportCodeData(object):
                     code_name = list_row[0]
                     if code_name in codes:
                         t_date = list_row[1]
-                        list_row[1] = t_date[0:4] + '-' + t_date[4:6] + '-' + t_date[6:8]
+                        list_row[1] = (
+                            t_date[0:4] + "-" + t_date[4:6] + "-" + t_date[6:8]
+                        )
                         list_row.extend(codes[code_name])
                         writer.writerow(list_row)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     """主程序，解析参数，并执行相关的命令"""
-    parser = argparse.ArgumentParser(description='获取指数里的每支股票')
-    parser.add_argument('-save_dir', required=True, type=str,
-                        help='Directory of the files')
-    parser.add_argument('-index_name', type=str, help='index name')
-    parser.add_argument('-host', type=str, default='127.0.0.1', help='The address of database')
-    parser.add_argument('-user', type=str, default='zcs', help='The user name of database')
-    parser.add_argument('-passwd', type=str, default='mydaydayup2023!', help='The password of database')
+    parser = argparse.ArgumentParser(description="获取指数里的每支股票")
+    parser.add_argument(
+        "-save_dir", required=True, type=str, help="Directory of the files"
+    )
+    parser.add_argument("-index_name", type=str, help="index name")
+    parser.add_argument(
+        "-host", type=str, default="127.0.0.1", help="The address of database"
+    )
+    parser.add_argument(
+        "-user", type=str, default="zcs", help="The user name of database"
+    )
+    parser.add_argument(
+        "-passwd", type=str, default="2025zcsdaydayup", help="The password of database"
+    )
 
     args = parser.parse_args()
 
     # 解析命令行中的参数
-    print("Begin export data, save_dir: %s, index_name: %s" % (args.save_dir, args.index_name))
+    print(
+        "Begin export data, save_dir: %s, index_name: %s"
+        % (args.save_dir, args.index_name)
+    )
 
     export = ExportCodeData(args)
     export.export_data(args.save_dir, args.index_name)
