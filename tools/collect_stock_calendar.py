@@ -45,9 +45,7 @@ class ExportCodeData(object):
 
             cursor.execute(query)
 
-            with open(
-                "%s/calendars/calendar.csv" % save_dir, "w", newline=""
-            ) as csvfile:
+            with open("%s/calendar.csv" % save_dir, "w", newline="") as csvfile:
                 writer = csv.writer(
                     csvfile, delimiter=",", quotechar="|", quoting=csv.QUOTE_MINIMAL
                 )
@@ -82,6 +80,6 @@ if __name__ == "__main__":
     print("Begin export data, save_dir: %s" % args.save_dir)
 
     export = ExportCodeData(args)
-    export.export_data(args.save_dir)
+    export.export_data(os.path.join(args.save_dir, "calendars"))
 
     print("End export data")

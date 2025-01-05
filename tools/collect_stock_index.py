@@ -79,7 +79,7 @@ class ExportCodeData(object):
             cursor.execute(query)
 
             with open(
-                "%s/instruments/%s.csv" % (save_dir, index_name), "w", newline=""
+                "%s/%s.csv" % (save_dir, index_name), "w", newline=""
             ) as csvfile:
                 writer = csv.writer(
                     csvfile, delimiter=",", quotechar="|", quoting=csv.QUOTE_MINIMAL
@@ -124,6 +124,6 @@ if __name__ == "__main__":
     )
 
     export = ExportCodeData(args)
-    export.export_data(args.save_dir, args.index_name)
+    export.export_data(os.path.join(args.save_dir, "instruments"), args.index_name)
 
     print("End export data")
