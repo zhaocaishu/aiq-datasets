@@ -104,7 +104,7 @@ class ExportCodeData(object):
                         list_row[1] = (
                             t_date[0:4] + "-" + t_date[4:6] + "-" + t_date[6:8]
                         )
-                        list_row.append(industry_name2id[codes[code][0]])
+                        list_row.append(codes[code][1])
                         writer.writerow(list_row)
 
 
