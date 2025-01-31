@@ -54,7 +54,7 @@ class ExportCodeData(object):
                 # 查询数据
                 query = (
                     "SELECT daily.* FROM ts_idx_index_daily daily"
-                    "WHERE daily.ts_code='%s' LIMIT 50000" % code
+                    "WHERE daily.index_code='%s' LIMIT 50000" % code
                 )
 
                 print(query)
