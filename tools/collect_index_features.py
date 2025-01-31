@@ -53,8 +53,8 @@ class ExportCodeData(object):
             for code in codes:
                 # 查询数据
                 query = (
-                    "SELECT daily.* FROM ts_idx_index_daily daily"
-                    "WHERE daily.index_code='%s' LIMIT 50000" % code
+                    "SELECT * FROM ts_idx_index_daily WHERE index_code='%s' LIMIT 50000"
+                    % code
                 )
 
                 print(query)
