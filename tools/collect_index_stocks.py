@@ -5,9 +5,7 @@ import csv
 
 import mysql.connector
 
-from helpers.utils import get_codes
-
-HEADER = ["Instrument", "Date", "Ind_class", "List_date"]
+HEADER = ["Instrument", "Date"]
 
 
 class ExportCodeData(object):
@@ -35,8 +33,6 @@ class ExportCodeData(object):
         # 创建目录
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
-
-        codes = get_codes(self.connection)
 
         # 从数据库导出数据
         with self.connection.cursor() as cursor:
@@ -78,9 +74,7 @@ class ExportCodeData(object):
 
             cursor.execute(query)
 
-            with open(
-                "%s/%s.csv" % (save_dir, index_name), "w", newline=""
-            ) as csvfile:
+            with open("%s/%s.csv" % (save_dir, index_name), "w", newline="") as csvfile:
                 writer = csv.writer(
                     csvfile, delimiter=",", quotechar="|", quoting=csv.QUOTE_MINIMAL
                 )
@@ -88,14 +82,9 @@ class ExportCodeData(object):
 
                 for row in cursor:
                     list_row = list(row)
-                    code_name = list_row[0]
-                    if code_name in codes:
-                        t_date = list_row[1]
-                        list_row[1] = (
-                            t_date[0:4] + "-" + t_date[4:6] + "-" + t_date[6:8]
-                        )
-                        list_row.extend(codes[code_name])
-                        writer.writerow(list_row)
+                    t_date = list_row[1]
+                    list_row[1] = t_date[0:4] + "-" + t_date[4:6] + "-" + t_date[6:8]
+                    writer.writerow(list_row)
 
 
 if __name__ == "__main__":

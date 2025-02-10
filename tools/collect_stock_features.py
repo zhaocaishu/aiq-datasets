@@ -5,7 +5,7 @@ import csv
 
 import mysql.connector
 
-from helpers.utils import get_codes
+from helpers.utils import fetch_listed_stocks
 
 HEADER = [
     "Instrument",
@@ -65,11 +65,11 @@ class ExportCodeData(object):
             os.makedirs(save_dir)
 
         # 获取上市的全部股票代码
-        codes = get_codes(self.connection)
+        stocks = fetch_listed_stocks(self.connection)
 
         # 从数据库导出数据
         with self.connection.cursor() as cursor:
-            for code in codes:
+            for code in stocks:
                 # 查询数据
                 query = (
                     "SELECT daily.*, daily_basic.turnover_rate, daily_basic.turnover_rate_f, "
@@ -103,7 +103,7 @@ class ExportCodeData(object):
                         list_row[1] = (
                             t_date[0:4] + "-" + t_date[4:6] + "-" + t_date[6:8]
                         )
-                        list_row.append(codes[code][0])
+                        list_row.append(stocks[code][0])
                         writer.writerow(list_row)
 
 
