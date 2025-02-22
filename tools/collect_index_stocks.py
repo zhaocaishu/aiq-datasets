@@ -44,7 +44,7 @@ class ExportCodeData(object):
 
             print(query)
 
-            cursor.execute(query, (index_name))
+            cursor.execute(query, (index_name,))
 
             with open("%s/%s.csv" % (save_dir, index_name), "w", newline="") as csvfile:
                 writer = csv.writer(
