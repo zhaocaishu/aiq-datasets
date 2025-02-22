@@ -38,13 +38,13 @@ class ExportCodeData(object):
         with self.connection.cursor() as cursor:
             # 查询数据
             query = (
-                "SELECT DISTINCT ts_code, trade_date FROM ts_idx_index_weight "
-                "WHERE index_code=%s" % index_name
+                "SELECT DISTINCT ts_code, trade_date "
+                "FROM ts_idx_index_weight WHERE index_code=%s"
             )
 
             print(query)
 
-            cursor.execute(query)
+            cursor.execute(query, (index_name))
 
             with open("%s/%s.csv" % (save_dir, index_name), "w", newline="") as csvfile:
                 writer = csv.writer(
