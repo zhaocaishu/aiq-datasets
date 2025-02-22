@@ -37,38 +37,10 @@ class ExportCodeData(object):
         # 从数据库导出数据
         with self.connection.cursor() as cursor:
             # 查询数据
-            if index_name == "csi100":
-                query = (
-                    "SELECT DISTINCT ts_code, trade_date FROM ts_idx_index_weight "
-                    "WHERE index_code='000903.SH'"
-                )
-            elif index_name == "csi300":
-                query = (
-                    "SELECT DISTINCT ts_code, trade_date FROM ts_idx_index_weight "
-                    "WHERE index_code='000300.SH'"
-                )
-            elif index_name == "csi500":
-                query = (
-                    "SELECT DISTINCT ts_code, trade_date FROM ts_idx_index_weight "
-                    "WHERE index_code='000905.SH'"
-                )
-            elif index_name == "csi1000":
-                query = (
-                    "SELECT DISTINCT ts_code, trade_date FROM ts_idx_index_weight "
-                    "WHERE index_code='000852.SH'"
-                )
-            elif index_name == "sh300":
-                query = (
-                    "SELECT DISTINCT ts_code, trade_date FROM ts_idx_index_weight "
-                    "WHERE index_code='000300.SH'"
-                )
-            elif index_name == "szzs":
-                query = (
-                    "SELECT DISTINCT ts_code, trade_date FROM ts_idx_index_weight "
-                    "WHERE index_code='399001.SZ'"
-                )
-            else:
-                raise ValueError("Unknown index name")
+            query = (
+                "SELECT DISTINCT ts_code, trade_date FROM ts_idx_index_weight "
+                "WHERE index_code=%s" % index_name
+            )
 
             print(query)
 
