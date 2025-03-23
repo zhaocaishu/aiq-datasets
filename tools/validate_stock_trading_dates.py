@@ -52,6 +52,7 @@ if __name__ == "__main__":
         print(f"数据中包含日期总数: {len(data_dates)}")
         print("\n差异检测结果:")
         print(f"数据缺失的交易日数量: {len(missing_dates)}")
+        print(f"数据缺失的交易日量: {sorted(missing_dates)}")
         print(f"数据中多余的非交易日数量: {len(extra_dates)}")
         print('------------------------------------\n')
 
