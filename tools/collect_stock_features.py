@@ -6,6 +6,7 @@ import csv
 import mysql.connector
 
 from helpers.utils import fetch_listed_stocks
+from helpers.industry import Industry
 
 HEADER = [
     "Instrument",
@@ -103,7 +104,9 @@ class ExportCodeData(object):
                         list_row[1] = (
                             t_date[0:4] + "-" + t_date[4:6] + "-" + t_date[6:8]
                         )
-                        list_row.append(stocks[code][0])
+                        ind_class = getattr(Industry, stocks[code][0], None)
+                        assert ind_class is not None
+                        list_row.append(ind_class)
                         writer.writerow(list_row)
 
 
