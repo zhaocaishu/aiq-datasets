@@ -106,7 +106,7 @@ class ExportCodeData(object):
                         )
                         ind_class = getattr(Industry, stocks[code][0], None)
                         assert ind_class is not None
-                        list_row.append(ind_class)
+                        list_row.append(ind_class.value)
                         writer.writerow(list_row)
 
 
