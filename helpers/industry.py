@@ -1,8 +1,6 @@
 from enum import Enum, auto
 
 
-from enum import Enum, auto
-
 class Industry(Enum):
     种植业 = 0
     渔业 = auto()
