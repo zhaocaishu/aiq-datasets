@@ -22,7 +22,7 @@ def fetch_listed_stocks(connection) -> Dict[str, Tuple[str, str]]:
     stocks = {}
     query = (
         "SELECT basic.ts_code, industry.l2_name, DATE_FORMAT(basic.list_date, '%Y-%m-%d') "
-        "FROM ts_basic_stock_list basic"
+        "FROM ts_basic_stock_list basic "
         "JOIN ts_idx_index_member_all industry "
         "ON basic.ts_code=industry.ts_code "
         "WHERE basic.market IN ('主板', '中小板', '创业板', '科创板') "
