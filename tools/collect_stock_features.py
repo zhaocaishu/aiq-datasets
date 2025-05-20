@@ -36,6 +36,7 @@ HEADER = [
     "Total_mv",
     "Circ_mv",
     "Adj_factor",
+    "Mkt_class",
     "Ind_class",
 ]
 
@@ -104,9 +105,22 @@ class ExportCodeData(object):
                         list_row[1] = (
                             t_date[0:4] + "-" + t_date[4:6] + "-" + t_date[6:8]
                         )
-                        ind_class = getattr(Industry, stocks[code][0], None)
+
+                        # add market class
+                        market_name = stocks[code][0]
+                        if market_name in ("科创板", "创业板"):
+                            market_class = 0
+                        elif market_name in ("主板", "中小板"):
+                            market_class = 1
+                        else:
+                            raise ValueError(f"Unknown market name: {market_name}")
+                        list_row.append(market_class)
+
+                        # add industry class
+                        ind_class = getattr(Industry, stocks[code][1], None)
                         assert ind_class is not None
                         list_row.append(ind_class.value)
+                        
                         writer.writerow(list_row)
 
 
