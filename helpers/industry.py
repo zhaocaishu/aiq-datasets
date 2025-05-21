@@ -1,7 +1,7 @@
 from enum import Enum, auto
 
 
-class Industry(Enum):
+class IndustryL2(Enum):
     种植业 = 0
     渔业 = auto()
     林业 = auto()
@@ -136,10 +136,10 @@ class Industry(Enum):
 
 
 if __name__ == '__main__':
-    category_name = '林业'
-    category_id = getattr(Industry, category_name, None)
+    category_name_l2 = '林业'
+    category_id_l2 = getattr(IndustryL2, category_name, None)
 
-    if category_id is not None:
-        print(category_id.value)
+    if category_id_l2 is not None:
+        print(category_id_l2.value)
     else:
         print("类别不存在")
