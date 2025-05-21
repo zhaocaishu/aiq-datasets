@@ -27,6 +27,7 @@ def fetch_listed_stocks(connection) -> Dict[str, Tuple[str, str]]:
         "ON basic.ts_code=industry.ts_code "
         "WHERE basic.market IN ('主板', '中小板', '创业板', '科创板') "
         "AND basic.list_status = 'L' "
+        "AND basic.name NOT LIKE '%ST%' "
         "AND industry.is_new = 'Y'"
     )
 
