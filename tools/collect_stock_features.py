@@ -39,6 +39,7 @@ HEADER = [
     "Mkt_class",
     "Ind_class_l1",
     "Ind_class_l2",
+    "List_date",
 ]
 
 
@@ -126,6 +127,8 @@ class ExportCodeData(object):
                         
                         list_row.append(ind_class_l1.value)
                         list_row.append(ind_class_l2.value)
+
+                        list_row.append(stocks[code][3])
                         
                         writer.writerow(list_row)
 
