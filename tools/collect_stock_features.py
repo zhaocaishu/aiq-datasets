@@ -6,7 +6,7 @@ import csv
 import mysql.connector
 
 from helpers.utils import fetch_listed_stocks
-from helpers.industry import Industry
+from helpers.industry import IndustryL1, IndustryL2
 
 HEADER = [
     "Instrument",
