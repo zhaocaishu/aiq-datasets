@@ -37,7 +37,8 @@ HEADER = [
     "Circ_mv",
     "Adj_factor",
     "Mkt_class",
-    "Ind_class",
+    "Ind_class_l1",
+    "Ind_class_l2",
 ]
 
 
@@ -117,9 +118,14 @@ class ExportCodeData(object):
                         list_row.append(market_class)
 
                         # add industry class
-                        ind_class = getattr(Industry, stocks[code][1], None)
-                        assert ind_class is not None
-                        list_row.append(ind_class.value)
+                        ind_class_l1 = getattr(IndustryL1, stocks[code][1], None)
+                        ind_class_l2 = getattr(IndustryL2, stocks[code][2], None)
+                        
+                        assert ind_class_l1 is not None
+                        assert ind_class_l2 is not None
+                        
+                        list_row.append(ind_class_l1.value)
+                        list_row.append(ind_class_l2.value)
                         
                         writer.writerow(list_row)
 
