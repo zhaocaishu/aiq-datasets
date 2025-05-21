@@ -6,19 +6,19 @@ def fetch_listed_stocks(connection) -> Dict[str, Tuple[str, str, str]]:
     获取交易所全部上市股票的基本信息。
 
     从数据库获取当前正常上市的主板、中小板、创业板、科创板股票信息，
-    包含股票代码、所属板块、所属行业和上市日期。
+    包含股票代码、所属板块、所属一级行业、所属二级行业和上市日期。
 
     Args:
         connection: 数据库连接对象
 
     Returns:
         dict: 字典格式的股票信息，键为股票代码 (ts_code)，
-              值为包含板块、行业和上市日期的元组 (market, industry, list_date)
+              值为包含板块、一级行业、二级行业和上市日期的元组 (market, industry_lv1, industry_lv2, list_date)
 
     Example:
         {
-            '600000.SH': ('主板', '银行', '2000-12-19'),
-            '300001.SZ': ('创业板', '医疗保健', '2009-10-30')
+            '002678.SZ': ('主板', '轻工制造', '文娱用品', '2012-05-30'),
+            '688798.SH': ('科创板', '电子', '半导体', '2021-08-16')
         }
     """
     stocks = {}
@@ -46,8 +46,8 @@ def fetch_listed_stocks(connection) -> Dict[str, Tuple[str, str, str]]:
 
     with connection.cursor() as cursor:
         cursor.execute(query)
-        for ts_code, market, industry, list_date in cursor.fetchall():
-            stocks[ts_code] = (market, industry, list_date)
+        for ts_code, market, industry_lv1, industry_lv2, list_date in cursor.fetchall():
+            stocks[ts_code] = (market, industry_lv1, industry_lv2, list_date)
 
     print(f"合计 {len(stocks)} 个上市股票代码")
     return stocks
