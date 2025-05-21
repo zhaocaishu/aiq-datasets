@@ -1,6 +1,39 @@
 from enum import Enum, auto
 
 
+class IndustryL1(Enum):
+    银行 = 0
+    房地产 = auto()
+    综合 = auto()
+    计算机 = auto()
+    环保 = auto()
+    商贸零售 = auto()
+    机械设备 = auto()
+    电力设备 = auto()
+    建筑装饰 = auto()
+    建筑材料 = auto()
+    基础化工 = auto()
+    家用电器 = auto()
+    纺织服饰 = auto()
+    农林牧渔 = auto()
+    电子 = auto()
+    公用事业 = auto()
+    医药生物 = auto()
+    汽车 = auto()
+    社会服务 = auto()
+    石油石化 = auto()
+    有色金属 = auto()
+    通信 = auto()
+    交通运输 = auto()
+    传媒 = auto()
+    非银金融 = auto()
+    轻工制造 = auto()
+    国防军工 = auto()
+    食品饮料 = auto()
+    煤炭 = auto()
+    钢铁 = auto()
+    美容护理 = auto()
+
 class IndustryL2(Enum):
     种植业 = 0
     渔业 = auto()
