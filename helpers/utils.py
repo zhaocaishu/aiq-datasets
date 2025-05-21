@@ -13,7 +13,7 @@ def fetch_listed_stocks(connection) -> Dict[str, Tuple[str, str, str]]:
 
     Returns:
         dict: 字典格式的股票信息，键为股票代码 (ts_code)，
-              值为包含板块、一级行业、二级行业和上市日期的元组 (market, industry_lv1, industry_lv2, list_date)
+              值为包含板块、一级行业、二级行业和上市日期的元组 (market, industry_l1, industry_l2, list_date)
 
     Example:
         {
@@ -46,8 +46,8 @@ def fetch_listed_stocks(connection) -> Dict[str, Tuple[str, str, str]]:
 
     with connection.cursor() as cursor:
         cursor.execute(query)
-        for ts_code, market, industry_lv1, industry_lv2, list_date in cursor.fetchall():
-            stocks[ts_code] = (market, industry_lv1, industry_lv2, list_date)
+        for ts_code, market, industry_l1, industry_l2, list_date in cursor.fetchall():
+            stocks[ts_code] = (market, industry_l1, industry_l2, list_date)
 
     print(f"合计 {len(stocks)} 个上市股票代码")
     return stocks
