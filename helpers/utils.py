@@ -3,8 +3,6 @@ from typing import Dict, Tuple
 
 def fetch_listed_stocks(connection) -> Dict[str, Tuple[str, str, str]]:
     """
-    获取交易所全部上市股票的基本信息。
-
     从数据库获取当前正常上市的主板、中小板、创业板、科创板股票信息，
     包含股票代码、所属板块、所属一级行业、所属二级行业和上市日期。
 
