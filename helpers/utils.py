@@ -5,7 +5,7 @@ def fetch_listed_stocks(connection) -> Dict[str, Tuple[str, str, str]]:
     """
     获取交易所全部上市股票的基本信息。
 
-    从数据库获取当前正常上市的主板、中小板、创业板、科创板股票信息，
+    从数据库获取当前正常上市的主板、中小板股票信息，
     包含股票代码、所属板块、所属一级行业、所属二级行业和上市日期。
 
     Args:
@@ -17,8 +17,7 @@ def fetch_listed_stocks(connection) -> Dict[str, Tuple[str, str, str]]:
 
     Example:
         {
-            '002678.SZ': ('主板', '轻工制造', '文娱用品', '2012-05-30'),
-            '688798.SH': ('科创板', '电子', '半导体', '2021-08-16')
+            '002678.SZ': ('主板', '轻工制造', '文娱用品', '2012-05-30')
         }
     """
     stocks = {}
@@ -39,7 +38,7 @@ def fetch_listed_stocks(connection) -> Dict[str, Tuple[str, str, str]]:
             WHERE is_new = 'Y'
         ) industry
         ON basic.ts_code = industry.ts_code AND industry.rn = 1
-        WHERE basic.market IN ('主板', '中小板', '创业板', '科创板')
+        WHERE basic.market IN ('主板', '中小板')
         AND basic.list_status = 'L'
         AND basic.name NOT LIKE '%ST%'
         AND industry.rn = 1
