@@ -169,10 +169,18 @@ class IndustryL2(Enum):
 
 
 if __name__ == '__main__':
+    category_name_l1 = '银行'
+    category_id_l1 = getattr(IndustryL1, category_name_l1, None)
+
+    if category_id_l1 is not None:
+        print(category_id_l1.value)
+    else:
+        print("一级类别不存在")
+    
     category_name_l2 = '林业'
-    category_id_l2 = getattr(IndustryL2, category_name, None)
+    category_id_l2 = getattr(IndustryL2, category_name_l2, None)
 
     if category_id_l2 is not None:
         print(category_id_l2.value)
     else:
-        print("类别不存在")
+        print("二级类别不存在")
