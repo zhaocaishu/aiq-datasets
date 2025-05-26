@@ -53,7 +53,27 @@ class ExportCodeData(object):
             for code in codes:
                 # 查询数据
                 query = (
-                    "SELECT * FROM ts_idx_index_daily WHERE index_code='%s' LIMIT 50000"
+                    """
+                    WITH up_stats AS (
+                        SELECT w.index_code,
+                               w.trade_date,
+                               AVG(CASE WHEN q.pct_chg > 0 THEN 1.0 ELSE 0.0 END) AS up_ratio
+                        FROM ts_idx_index_weight AS w
+                        JOIN ts_quotation_daily AS q
+                        ON w.ts_code = q.ts_code
+                        AND w.trade_date = q.trade_date
+                        GROUP BY w.index_code, w.trade_date
+                    )
+
+                    -- 2. 将占比结果与指数日度行情特征合并
+                    SELECT d.*,
+                           u.up_ratio AS up_ratio
+                    FROM ts_idx_index_daily AS d
+                    JOIN up_stats AS u
+                    ON d.index_code = u.index_code
+                    AND d.trade_date = u.trade_date
+                    WHERE d.index_code = '%s'
+                """
                     % code
                 )
 
