@@ -49,20 +49,6 @@ class ExportCodeData(object):
         self.__init_db(args.host, args.user, args.passwd)
 
     def __init_db(self, host, user, passwd):
-        """init db, and show tables"""
-        self.connection = mysql.connector.connect(
-            host=host,
-            user=user,
-            passwd=passwd,
-            database="stock_info"
-        )
-
-        with self.connection.cursor() as cursor:
-            cursor.execute("SHOW TABLES")
-
-            for table in cursor:
-                print(table)
-
         self.engine = create_engine("mysql+pymysql://zcs:2025zcsdaydayup@127.0.0.1/stock_info")
 
     def _preprocess_index_weight(self, code: str) -> pd.DataFrame:
@@ -126,32 +112,31 @@ class ExportCodeData(object):
         codes = ["000300.SH", "000903.SH", "000905.SH"]
 
         # 从数据库导出数据
-        with self.connection.cursor() as cursor:
-            for code in codes:
-                # 查询数据
-                print("Exporting %s" % code)
+        for code in codes:
+            # 查询数据
+            print("Exporting %s" % code)
 
-                # 将指数权重按日补充完整
-                self._preprocess_index_weight(code)
+            # 将指数权重按日补充完整
+            self._preprocess_index_weight(code)
 
-                cursor.execute(QUERY_SQL, (code, code))
+            with self.engine.connect() as conn:
+                df = pd.read_sql(text(QUERY_SQL), conn, params={"index_code": index_code})
 
-                with open("%s/%s.csv" % (save_dir, code), "w", newline="") as csvfile:
-                    writer = csv.writer(
-                        csvfile, delimiter=",", quotechar="|", quoting=csv.QUOTE_MINIMAL
-                    )
-                    writer.writerow(HEADER)
+            with open("%s/%s.csv" % (save_dir, code), "w", newline="") as csvfile:
+                writer = csv.writer(
+                    csvfile, delimiter=",", quotechar="|", quoting=csv.QUOTE_MINIMAL
+                )
+                writer.writerow(HEADER)
 
-                    for row in cursor:
-                        list_row = list(row)
-                        t_date = list_row[1]
-                        # Format date as YYYY-MM-DD
-                        list_row[1] = f"{t_date[0:4]}-{t_date[4:6]}-{t_date[6:8]}"
-                        writer.writerow(list_row)
+                for row in df.iterrows():
+                    list_row = list(row)
+                    t_date = list_row[1]
+                    # Format date as YYYY-MM-DD
+                    list_row[1] = f"{t_date[0:4]}-{t_date[4:6]}-{t_date[6:8]}"
+                    writer.writerow(list_row)
 
     def close(self):
         """关闭数据库连接"""
-        self.connection.close()
         self.engine.dispose()
 
 
