@@ -6,7 +6,6 @@ import pandas as pd
 
 import pymysql
 from sqlalchemy import create_engine, text
-import mysql.connector
 
 HEADER = [
     "Instrument",
@@ -90,7 +89,7 @@ class ExportCodeData(object):
 
         # Optionally write to database
         with self.engine.begin() as conn:  # 自动提交事务
-            conn.execute("DELETE FROM ts_idx_index_weight_daily")
+            conn.execute(text("DELETE FROM ts_idx_index_weight_daily"))
             df_filled.to_sql(
                 name='ts_idx_index_weight_daily',
                 con=engine,
