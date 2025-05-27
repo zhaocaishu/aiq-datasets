@@ -90,10 +90,6 @@ class ExportCodeData(object):
     
             # 3. Create unique, sorted trading calendar
             calendar = df_cal['cal_date'].drop_duplicates().sort_values()
-    
-            # 4. Optimize forward fill using vectorized operations
-            df_weight['trade_date'] = pd.to_datetime(df_weight['trade_date'])
-            calendar = pd.to_datetime(calendar)
             
             # Create a MultiIndex for reindexing
             groups = df_weight.groupby(['index_code', 'ts_code'])
