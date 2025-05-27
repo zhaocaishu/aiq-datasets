@@ -58,6 +58,10 @@ class ExportCodeData(object):
                     list_row[1] = t_date[0:4] + "-" + t_date[4:6] + "-" + t_date[6:8]
                     writer.writerow(list_row)
 
+    def close(self):
+        """关闭数据库连接"""
+        self.connection.close()
+
 
 if __name__ == "__main__":
     """主程序，解析参数，并执行相关的命令"""
@@ -85,6 +89,9 @@ if __name__ == "__main__":
     )
 
     export = ExportCodeData(args)
-    export.export_data(os.path.join(args.save_dir, "instruments"), args.index_name)
+    try:
+        export.export_data(os.path.join(args.save_dir, "instruments"), args.index_name)
+    finally:
+        export.close()  # 确保连接被关闭
 
     print("End export data")
