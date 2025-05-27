@@ -102,7 +102,7 @@ class ExportCodeData(object):
             # 5. Concatenate results
             df_filled = pd.concat(filled_dfs, ignore_index=True)[['index_code', 'ts_code', 'cal_date', 'weight']]
             df_filled.rename(columns={'cal_date': 'trade_date'}, inplace=True)
-            df_filled = df_filled.dropna(subset=['col'])
+            df_filled = df_filled.dropna(subset=['weight'])
     
             # 6. Optionally write to database
             with self.connection.cursor() as cursor:
