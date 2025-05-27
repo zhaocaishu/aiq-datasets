@@ -128,7 +128,7 @@ class ExportCodeData(object):
                 )
                 writer.writerow(HEADER)
 
-                for row in df.iterrows():
+                for _, row in df.iterrows():
                     list_row = list(row)
                     t_date = list_row[1]
                     # Format date as YYYY-MM-DD
