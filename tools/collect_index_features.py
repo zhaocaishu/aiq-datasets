@@ -5,7 +5,7 @@ import csv
 import pandas as pd
 
 import pymysql
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 import mysql.connector
 
 HEADER = [
@@ -81,7 +81,7 @@ class ExportCodeData(object):
                 connect_args={"charset": "utf8mb4"},
             )
             with engine.connect() as conn:
-                conn.execute("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci")
+                conn.execute(text("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"))
     
             # 2. Fetch data efficiently with parameterized queries
             query_weight = "SELECT index_code, ts_code, trade_date, weight FROM ts_idx_index_weight WHERE index_code = %s"
