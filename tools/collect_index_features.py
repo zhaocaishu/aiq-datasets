@@ -46,7 +46,7 @@ expanded AS (
     CROSS JOIN calendar c
     LEFT JOIN ts_idx_index_weight w
     ON w.index_code = rw.index_code
-    AND w.ts_code    = rw.ts_code
+    AND w.ts_code = rw.ts_code
     AND w.trade_date = c.trade_date
 ),
 -- 4. 用窗口函数按日期向前填充权重
@@ -122,7 +122,7 @@ class ExportCodeData(object):
                 # 查询数据
                 print("Exporting %s" % code)
 
-                cursor.execute(QUERY_SQL, (code, code))
+                cursor.execute(QUERY_SQL, (code, code, code, code))
 
                 with open("%s/%s.csv" % (save_dir, code), "w", newline="") as csvfile:
                     writer = csv.writer(
