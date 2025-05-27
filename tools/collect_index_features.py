@@ -78,8 +78,7 @@ class ExportCodeData(object):
         Raises:
             pymysql.Error: If database operations fail.
         """
-        # 1. Initialize database connection using SQLAlchemy for better performance
-        # 2. Fetch data efficiently with parameterized queries
+        # Fetch data efficiently with parameterized queries
         query_weight = "SELECT index_code, ts_code, trade_date, weight FROM ts_idx_index_weight WHERE index_code = %s"
         query_cal = "SELECT cal_date FROM ts_basic_trade_cal WHERE is_open = 1 ORDER BY cal_date"
         
@@ -87,7 +86,7 @@ class ExportCodeData(object):
             df_weight = pd.read_sql(query_weight, conn, params=(code,))
             df_cal = pd.read_sql(query_cal, conn)
 
-        # 3. Create unique, sorted trading calendar
+        # Create unique, sorted trading calendar
         calendar = df_cal['cal_date'].drop_duplicates().sort_values()
         
         # Create a MultiIndex for reindexing
@@ -98,12 +97,12 @@ class ExportCodeData(object):
             group = group.reset_index().assign(index_code=index_code, ts_code=ts_code)
             filled_dfs.append(group)
 
-        # 5. Concatenate results
+        # Concatenate results
         df_filled = pd.concat(filled_dfs, ignore_index=True)[['index_code', 'ts_code', 'cal_date', 'weight']]
         df_filled.rename(columns={'cal_date': 'trade_date'}, inplace=True)
         df_filled = df_filled.dropna(subset=['weight'])
 
-        # 6. Optionally write to database
+        # Optionally write to database
         with self.engine.begin() as conn:  # 自动提交事务
             conn.execute("DELETE FROM ts_idx_index_weight_daily")
             df_filled.to_sql(
