@@ -63,6 +63,8 @@ class ExportCodeData(object):
             for table in cursor:
                 print(table)
 
+        self.engine = create_engine("mysql+pymysql://zcs:2025zcsdaydayup@127.0.0.1/stock_info")
+
     def _preprocess_index_weight(self, code: str) -> pd.DataFrame:
         """
         Preprocess index weight data by forward-filling weights across all trading days.
@@ -76,46 +78,41 @@ class ExportCodeData(object):
         Raises:
             pymysql.Error: If database operations fail.
         """
-        try:
-            # 1. Initialize database connection using SQLAlchemy for better performance
-            engine = create_engine("mysql+pymysql://zcs:2025zcsdaydayup@127.0.0.1/stock_info")
-    
-            # 2. Fetch data efficiently with parameterized queries
-            query_weight = "SELECT index_code, ts_code, trade_date, weight FROM ts_idx_index_weight WHERE index_code = %s"
-            query_cal = "SELECT cal_date FROM ts_basic_trade_cal WHERE is_open = 1 ORDER BY cal_date"
-            
-            with engine.connect() as conn:
-                df_weight = pd.read_sql(query_weight, conn, params=(code,))
-                df_cal = pd.read_sql(query_cal, conn)
-    
-            # 3. Create unique, sorted trading calendar
-            calendar = df_cal['cal_date'].drop_duplicates().sort_values()
-            
-            # Create a MultiIndex for reindexing
-            filled_dfs = []
-            groups = df_weight.groupby(['index_code', 'ts_code'])
-            for (index_code, ts_code), group in groups:
-                group = group.set_index('trade_date')[['weight']].reindex(calendar, method='ffill')
-                group = group.reset_index().assign(index_code=index_code, ts_code=ts_code)
-                filled_dfs.append(group)
-    
-            # 5. Concatenate results
-            df_filled = pd.concat(filled_dfs, ignore_index=True)[['index_code', 'ts_code', 'cal_date', 'weight']]
-            df_filled.rename(columns={'cal_date': 'trade_date'}, inplace=True)
-            df_filled = df_filled.dropna(subset=['weight'])
-    
-            # 6. Optionally write to database
-            with engine.begin() as conn:  # 自动提交事务
-                conn.execute("DELETE FROM ts_idx_index_weight_daily")
-                df_filled.to_sql(
-                    name='ts_idx_index_weight_daily',
-                    con=engine,
-                    index=False,
-                    if_exists='append',  # 表存在就追加
-                    method='multi'       # 批量插入，提升性能
-                )
-        finally:
-            engine.dispose()  # Ensure proper cleanup
+        # 1. Initialize database connection using SQLAlchemy for better performance
+        # 2. Fetch data efficiently with parameterized queries
+        query_weight = "SELECT index_code, ts_code, trade_date, weight FROM ts_idx_index_weight WHERE index_code = %s"
+        query_cal = "SELECT cal_date FROM ts_basic_trade_cal WHERE is_open = 1 ORDER BY cal_date"
+        
+        with self.engine.connect() as conn:
+            df_weight = pd.read_sql(query_weight, conn, params=(code,))
+            df_cal = pd.read_sql(query_cal, conn)
+
+        # 3. Create unique, sorted trading calendar
+        calendar = df_cal['cal_date'].drop_duplicates().sort_values()
+        
+        # Create a MultiIndex for reindexing
+        filled_dfs = []
+        groups = df_weight.groupby(['index_code', 'ts_code'])
+        for (index_code, ts_code), group in groups:
+            group = group.set_index('trade_date')[['weight']].reindex(calendar, method='ffill')
+            group = group.reset_index().assign(index_code=index_code, ts_code=ts_code)
+            filled_dfs.append(group)
+
+        # 5. Concatenate results
+        df_filled = pd.concat(filled_dfs, ignore_index=True)[['index_code', 'ts_code', 'cal_date', 'weight']]
+        df_filled.rename(columns={'cal_date': 'trade_date'}, inplace=True)
+        df_filled = df_filled.dropna(subset=['weight'])
+
+        # 6. Optionally write to database
+        with self.engine.begin() as conn:  # 自动提交事务
+            conn.execute("DELETE FROM ts_idx_index_weight_daily")
+            df_filled.to_sql(
+                name='ts_idx_index_weight_daily',
+                con=engine,
+                index=False,
+                if_exists='append',  # 表存在就追加
+                method='multi'       # 批量插入，提升性能
+            )
 
     def export_data(self, save_dir):
         """导出数据到文件
@@ -156,6 +153,7 @@ class ExportCodeData(object):
     def close(self):
         """关闭数据库连接"""
         self.connection.close()
+        self.engine.dispose()
 
 
 if __name__ == "__main__":
