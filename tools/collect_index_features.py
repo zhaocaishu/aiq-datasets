@@ -5,6 +5,7 @@ import csv
 import pandas as pd
 
 import pymysql
+from sqlalchemy import create_engine
 import mysql.connector
 
 HEADER = [
@@ -62,32 +63,61 @@ class ExportCodeData(object):
             for table in cursor:
                 print(table)
 
-    def _preprocess_index_weight(self, code):
-        # 1. 获取数据
-        conn = pymysql.connect(host='127.0.0.1', user='zcs', password='2025zcsdaydayup', database='stock_info')
-        df_weight = pd.read_sql("SELECT * FROM ts_idx_index_weight WHERE index_code = '%s'" % code, conn)
-        df_cal = pd.read_sql("SELECT cal_date FROM ts_basic_trade_cal WHERE is_open = 1", conn)
-        
-        # 2. 构建完整的 trade_date 序列
-        calendar = df_cal['cal_date'].sort_values().drop_duplicates()
-        
-        # 3. 对每组 index_code 和 ts_code 做前向填充
-        filled_list = []
-        for (index_code, ts_code), group in df_weight.groupby(['index_code', 'ts_code']):
-            group = group.sort_values('trade_date')
-            group = group.set_index('trade_date')
-            group = group.reindex(calendar, method='ffill')  # 前向填充
-            group['index_code'] = index_code
-            group['ts_code'] = ts_code
-            group = group.reset_index().rename(columns={'cal_date': 'trade_date'})
-            filled_list.append(group)
-        
-        # 4. 合并结果
-        df_filled = pd.concat(filled_list, ignore_index=True)
-        df_filled = df_filled[['index_code', 'ts_code', 'trade_date', 'weight']]
-        
-        # 可选择写回数据库
-        df_filled.to_sql('ts_idx_index_weight_daily', conn, index=False)
+    def _preprocess_index_weight(self, code: str) -> pd.DataFrame:
+        """
+        Preprocess index weight data by forward-filling weights across all trading days.
+    
+        Args:
+            code (str): Index code to filter the data.
+    
+        Returns:
+            pd.DataFrame: Processed DataFrame with filled weights.
+    
+        Raises:
+            pymysql.Error: If database operations fail.
+        """
+        try:
+            # 1. Initialize database connection using SQLAlchemy for better performance
+            engine = create_engine('mysql+pymysql://zcs:2025zcsdaydayup@127.0.0.1/stock_info')
+    
+            # 2. Fetch data efficiently with parameterized queries
+            query_weight = "SELECT index_code, ts_code, trade_date, weight FROM ts_idx_index_weight WHERE index_code = %s"
+            query_cal = "SELECT cal_date FROM ts_basic_trade_cal WHERE is_open = 1 ORDER BY cal_date"
+            
+            with engine.connect() as conn:
+                df_weight = pd.read_sql(query_weight, conn, params=(code,))
+                df_cal = pd.read_sql(query_cal, conn)
+    
+            # 3. Create unique, sorted trading calendar
+            calendar = df_cal['cal_date'].drop_duplicates().sort_values()
+    
+            # 4. Optimize forward fill using vectorized operations
+            df_weight['trade_date'] = pd.to_datetime(df_weight['trade_date'])
+            calendar = pd.to_datetime(calendar)
+            
+            # Create a MultiIndex for reindexing
+            groups = df_weight.groupby(['index_code', 'ts_code'])
+            filled_dfs = []
+    
+            for (index_code, ts_code), group in groups:
+                group = group.set_index('trade_date')[['weight']].reindex(calendar, method='ffill')
+                group = group.reset_index().assign(index_code=index_code, ts_code=ts_code)
+                filled_dfs.append(group)
+    
+            # 5. Concatenate results
+            df_filled = pd.concat(filled_dfs, ignore_index=True)[['index_code', 'ts_code', 'cal_date', 'weight']]
+            df_filled.rename(columns={'cal_date': 'trade_date'}, inplace=True)
+    
+            # 6. Optionally write to database
+            df_filled.to_sql('ts_idx_index_weight_daily', engine, index=False, if_exists='replace')
+        except pymysql.Error as e:
+            print(f"Database error: {e}")
+            raise
+        except Exception as e:
+            print(f"Error during preprocessing: {e}")
+            raise
+        finally:
+            engine.dispose()  # Ensure proper cleanup
 
     def export_data(self, save_dir):
         """导出数据到文件
