@@ -95,7 +95,8 @@ class ExportCodeData(object):
                 con=conn,
                 index=False,
                 if_exists='append',  # 表存在就追加
-                method='multi'       # 批量插入，提升性能
+                method='multi',       # 批量插入，提升性能
+                chunksize=1000
             )
 
     def export_data(self, save_dir):
