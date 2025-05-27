@@ -54,9 +54,7 @@ class ExportCodeData(object):
             host=host,
             user=user,
             passwd=passwd,
-            database="stock_info",
-            charset='utf8mb4',
-            collation='utf8mb4_unicode_ci'  # Set connection-level collation
+            database="stock_info"
         )
 
         with self.connection.cursor() as cursor:
