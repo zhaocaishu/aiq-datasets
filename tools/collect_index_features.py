@@ -23,8 +23,8 @@ HEADER = [
 QUERY_SQL = """
 WITH up_stats AS (
     SELECT w.index_code,
-            w.trade_date,
-            AVG(CASE WHEN q.pct_chg > 0 THEN 1.0 ELSE 0.0 END) AS up_ratio
+           w.trade_date,
+           AVG(CASE WHEN q.pct_chg > 0 THEN 1.0 ELSE 0.0 END) AS up_ratio
     FROM ts_idx_index_weight AS w
     JOIN ts_quotation_daily AS q
     ON w.ts_code = q.ts_code
