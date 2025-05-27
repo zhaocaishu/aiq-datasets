@@ -105,7 +105,8 @@ class ExportCodeData(object):
             df_filled.rename(columns={'cal_date': 'trade_date'}, inplace=True)
     
             # 6. Optionally write to database
-            df_filled.to_sql('ts_idx_index_weight_daily', engine, index=False, if_exists='replace')
+            self.connection.execute("DELETE FROM ts_idx_index_weight_daily")
+            df_filled.to_sql('ts_idx_index_weight_daily', engine, index=False, if_exists='append')
         except pymysql.Error as e:
             print(f"Database error: {e}")
             raise
