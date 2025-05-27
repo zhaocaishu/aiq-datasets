@@ -3,6 +3,7 @@ import os
 import argparse
 import csv
 
+import pymysql
 import mysql.connector
 
 HEADER = [
@@ -21,67 +22,23 @@ HEADER = [
 ]
 
 QUERY_SQL = """
-WITH
--- 1. 构造所有交易日
-calendar AS (
-    SELECT DISTINCT trade_date
-    FROM ts_quotation_daily
-    WHERE index_code = '%s'
-),
--- 2. 拿到该指数所有成分和它们原始的权重表
-raw_weights AS (
-    SELECT index_code, ts_code
-    FROM ts_idx_index_weight
-    WHERE index_code = '%s'
-    GROUP BY index_code, ts_code
-),
--- 3. 把所有成分在每个交易日都拉出来，再左联原始权重
-expanded AS (
-    SELECT
-        rw.index_code,
-        rw.ts_code,
-        c.trade_date,
-        w.weight
-    FROM raw_weights rw
-    CROSS JOIN calendar c
-    LEFT JOIN ts_idx_index_weight w
-    ON w.index_code = rw.index_code
-    AND w.ts_code = rw.ts_code
-    AND w.trade_date = c.trade_date
-),
--- 4. 用窗口函数按日期向前填充权重
-filled AS (
-    SELECT
-        index_code,
-        ts_code,
-        trade_date,
-        LAST_VALUE(weight) 
-          OVER (
-            PARTITION BY index_code, ts_code 
-            ORDER BY trade_date 
-            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-          ) AS weight_filled
-    FROM expanded
-),
--- 5. 基于填充后的权重表计算 up_ratio
-up_stats AS (
-    SELECT
-        f.index_code,
-        f.trade_date,
-        AVG(CASE WHEN q.pct_chg > 0 THEN 1.0 ELSE 0.0 END) AS up_ratio
-    FROM filled f
-    JOIN ts_quotation_daily q
-    ON f.ts_code    = q.ts_code
-    AND f.trade_date = q.trade_date
-    WHERE f.index_code = '%s'
-    GROUP BY f.index_code, f.trade_date
+WITH up_stats AS (
+    SELECT w.index_code,
+           w.trade_date,
+           AVG(CASE WHEN q.pct_chg > 0 THEN 1.0 ELSE 0.0 END) AS up_ratio
+    FROM ts_idx_index_weight_daily AS w
+    JOIN ts_quotation_daily AS q
+    ON w.ts_code = q.ts_code
+    AND w.trade_date = q.trade_date
+    WHERE w.index_code = '%s'
+    GROUP BY w.index_code, w.trade_date
 )
--- 最后把 up_ratio join 回主表
-SELECT
-    d.*,
-    u.up_ratio
-FROM ts_idx_index_daily d
-JOIN up_stats u
+
+-- 2. 将占比结果与指数日度行情特征合并
+SELECT d.*,
+       u.up_ratio AS up_ratio
+FROM ts_idx_index_daily AS d
+JOIN up_stats AS u
 ON d.index_code = u.index_code
 AND d.trade_date = u.trade_date
 WHERE d.index_code = '%s'
@@ -104,6 +61,33 @@ class ExportCodeData(object):
             for table in cursor:
                 print(table)
 
+    def _preprocess_index_weight(self, code):
+        # 1. 获取数据
+        conn = pymysql.connect(host='127.0.0.1', user='zcs', password='2025zcsdaydayup', database='stock_info')
+        df_weight = pd.read_sql(f"SELECT * FROM ts_idx_index_weight WHERE index_code = {code}", conn)
+        df_cal = pd.read_sql("SELECT cal_date FROM ts_basic_trade_cal WHERE is_open = 1", conn)
+        
+        # 2. 构建完整的 trade_date 序列
+        calendar = df_cal['cal_date'].sort_values().drop_duplicates()
+        
+        # 3. 对每组 index_code 和 ts_code 做前向填充
+        filled_list = []
+        for (index_code, ts_code), group in df_weight.groupby(['index_code', 'ts_code']):
+            group = group.sort_values('trade_date')
+            group = group.set_index('trade_date')
+            group = group.reindex(calendar, method='ffill')  # 前向填充
+            group['index_code'] = index_code
+            group['ts_code'] = ts_code
+            group = group.reset_index().rename(columns={'index': 'trade_date'})
+            filled_list.append(group)
+        
+        # 4. 合并结果
+        df_filled = pd.concat(filled_list, ignore_index=True)
+        df_filled = df_filled[['index_code', 'ts_code', 'trade_date', 'weight']]
+        
+        # 可选择写回数据库
+        df_filled.to_sql('ts_idx_index_weight_daily', conn, index=False)
+
     def export_data(self, save_dir):
         """导出数据到文件
         Args:
@@ -116,13 +100,16 @@ class ExportCodeData(object):
         # 上市的全部指数代码
         codes = ["000300.SH", "000903.SH", "000905.SH"]
 
+        # 将指数权重转成按日
+        self._preprocess_index_weight(code)
+
         # 从数据库导出数据
         with self.connection.cursor() as cursor:
             for code in codes:
                 # 查询数据
                 print("Exporting %s" % code)
 
-                cursor.execute(QUERY_SQL, (code, code, code, code))
+                cursor.execute(QUERY_SQL, (code, code))
 
                 with open("%s/%s.csv" % (save_dir, code), "w", newline="") as csvfile:
                     writer = csv.writer(
