@@ -29,7 +29,7 @@ WITH up_stats AS (
            AVG(CASE WHEN q.pct_chg > 0 THEN 1.0 ELSE 0.0 END) AS up_ratio
     FROM ts_idx_index_weight_daily AS w
     JOIN ts_quotation_daily AS q
-    ON w.ts_code = q.ts_code COLLATE utf8mb4_unicode_ci
+    ON w.ts_code COLLATE utf8mb4_unicode_ci = q.ts_code COLLATE utf8mb4_unicode_ci
     AND w.trade_date = q.trade_date
     WHERE w.index_code = %s
     GROUP BY w.trade_date
@@ -51,7 +51,12 @@ class ExportCodeData(object):
     def __init_db(self, host, user, passwd):
         """init db, and show tables"""
         self.connection = mysql.connector.connect(
-            host=host, user=user, passwd=passwd, database="stock_info"
+            host=host,
+            user=user,
+            passwd=passwd,
+            database="stock_info",
+            charset='utf8mb4',
+            collation='utf8mb4_unicode_ci'  # Set connection-level collation
         )
 
         with self.connection.cursor() as cursor:
