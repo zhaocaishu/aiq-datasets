@@ -100,14 +100,14 @@ class ExportCodeData(object):
         # 上市的全部指数代码
         codes = ["000300.SH", "000903.SH", "000905.SH"]
 
-        # 将指数权重转成按日
-        self._preprocess_index_weight(code)
-
         # 从数据库导出数据
         with self.connection.cursor() as cursor:
             for code in codes:
                 # 查询数据
                 print("Exporting %s" % code)
+
+                # 将指数权重按日补充完整
+                self._preprocess_index_weight(code)
 
                 cursor.execute(QUERY_SQL, (code, code))
 
