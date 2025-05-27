@@ -31,7 +31,7 @@ WITH up_stats AS (
     JOIN ts_quotation_daily AS q
     ON w.ts_code COLLATE = q.ts_code
     AND w.trade_date = q.trade_date
-    WHERE w.index_code = '%s'
+    WHERE w.index_code = %s
     GROUP BY w.trade_date
 )
 
@@ -40,7 +40,7 @@ SELECT d.*,
 FROM ts_idx_index_daily AS d
 JOIN up_stats AS u
 ON d.trade_date = u.trade_date
-WHERE d.index_code = '%s'
+WHERE d.index_code = %s
 """
 
 
