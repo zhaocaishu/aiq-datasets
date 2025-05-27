@@ -132,6 +132,10 @@ class ExportCodeData(object):
                         
                         writer.writerow(list_row)
 
+    def close(self):
+        """关闭数据库连接"""
+        self.connection.close()
+
 
 if __name__ == "__main__":
     """主程序，解析参数，并执行相关的命令"""
@@ -155,6 +159,9 @@ if __name__ == "__main__":
     print("Begin export data, save directory: %s" % args.save_dir)
 
     export = ExportCodeData(args)
-    export.export_data(os.path.join(args.save_dir, "features"))
+    try:
+        export.export_data(os.path.join(args.save_dir, "features"))
+    finally:
+        export.close()  # 确保连接被关闭
 
     print("End export data")
