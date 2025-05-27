@@ -29,13 +29,12 @@ WITH up_stats AS (
            AVG(CASE WHEN q.pct_chg > 0 THEN 1.0 ELSE 0.0 END) AS up_ratio
     FROM ts_idx_index_weight_daily AS w
     JOIN ts_quotation_daily AS q
-    ON w.ts_code = q.ts_code
+    ON w.ts_code COLLATE utf8mb4_unicode_ci = q.ts_code COLLATE utf8mb4_unicode_ci
     AND w.trade_date = q.trade_date
     WHERE w.index_code COLLATE utf8mb4_unicode_ci = %s
     GROUP BY w.trade_date
 )
 
--- 2. 将占比结果与指数日度行情特征合并
 SELECT d.*,
        u.up_ratio AS up_ratio
 FROM ts_idx_index_daily AS d
