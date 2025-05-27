@@ -65,7 +65,7 @@ class ExportCodeData(object):
     def _preprocess_index_weight(self, code):
         # 1. 获取数据
         conn = pymysql.connect(host='127.0.0.1', user='zcs', password='2025zcsdaydayup', database='stock_info')
-        df_weight = pd.read_sql(f"SELECT * FROM ts_idx_index_weight WHERE index_code = {code}", conn)
+        df_weight = pd.read_sql(f"SELECT * FROM ts_idx_index_weight WHERE index_code = '%s' % code", conn)
         df_cal = pd.read_sql("SELECT cal_date FROM ts_basic_trade_cal WHERE is_open = 1", conn)
         
         # 2. 构建完整的 trade_date 序列
