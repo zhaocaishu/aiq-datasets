@@ -21,23 +21,67 @@ HEADER = [
 ]
 
 QUERY_SQL = """
-WITH up_stats AS (
-    SELECT w.index_code,
-           w.trade_date,
-           AVG(CASE WHEN q.pct_chg > 0 THEN 1.0 ELSE 0.0 END) AS up_ratio
-    FROM ts_idx_index_weight AS w
-    JOIN ts_quotation_daily AS q
-    ON w.ts_code = q.ts_code
-    AND w.trade_date = q.trade_date
-    WHERE w.index_code = '%s'
-    GROUP BY w.index_code, w.trade_date
+WITH
+-- 1. 构造所有交易日
+calendar AS (
+    SELECT DISTINCT trade_date
+    FROM ts_quotation_daily
+    WHERE index_code = '%s'
+),
+-- 2. 拿到该指数所有成分和它们原始的权重表
+raw_weights AS (
+    SELECT index_code, ts_code
+    FROM ts_idx_index_weight
+    WHERE index_code = '%s'
+    GROUP BY index_code, ts_code
+),
+-- 3. 把所有成分在每个交易日都拉出来，再左联原始权重
+expanded AS (
+    SELECT
+        rw.index_code,
+        rw.ts_code,
+        c.trade_date,
+        w.weight
+    FROM raw_weights rw
+    CROSS JOIN calendar c
+    LEFT JOIN ts_idx_index_weight w
+    ON w.index_code = rw.index_code
+    AND w.ts_code    = rw.ts_code
+    AND w.trade_date = c.trade_date
+),
+-- 4. 用窗口函数按日期向前填充权重
+filled AS (
+    SELECT
+        index_code,
+        ts_code,
+        trade_date,
+        LAST_VALUE(weight) 
+          OVER (
+            PARTITION BY index_code, ts_code 
+            ORDER BY trade_date 
+            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+          ) AS weight_filled
+    FROM expanded
+),
+-- 5. 基于填充后的权重表计算 up_ratio
+up_stats AS (
+    SELECT
+        f.index_code,
+        f.trade_date,
+        AVG(CASE WHEN q.pct_chg > 0 THEN 1.0 ELSE 0.0 END) AS up_ratio
+    FROM filled f
+    JOIN ts_quotation_daily q
+    ON f.ts_code    = q.ts_code
+    AND f.trade_date = q.trade_date
+    WHERE f.index_code = '%s'
+    GROUP BY f.index_code, f.trade_date
 )
-
--- 2. 将占比结果与指数日度行情特征合并
-SELECT d.*,
-       u.up_ratio AS up_ratio
-FROM ts_idx_index_daily AS d
-JOIN up_stats AS u
+-- 最后把 up_ratio join 回主表
+SELECT
+    d.*,
+    u.up_ratio
+FROM ts_idx_index_daily d
+JOIN up_stats u
 ON d.index_code = u.index_code
 AND d.trade_date = u.trade_date
 WHERE d.index_code = '%s'
@@ -76,11 +120,9 @@ class ExportCodeData(object):
         with self.connection.cursor() as cursor:
             for code in codes:
                 # 查询数据
-                query = QUERY_SQL % code
+                print("Exporting %s" % code)
 
-                print(query)
-
-                cursor.execute(query)
+                cursor.execute(QUERY_SQL, (code, code))
 
                 with open("%s/%s.csv" % (save_dir, code), "w", newline="") as csvfile:
                     writer = csv.writer(
@@ -95,6 +137,10 @@ class ExportCodeData(object):
                             t_date[0:4] + "-" + t_date[4:6] + "-" + t_date[6:8]
                         )
                         writer.writerow(list_row)
+
+    def close(self):
+        """关闭数据库连接"""
+        self.connection.close()
 
 
 if __name__ == "__main__":
@@ -119,6 +165,9 @@ if __name__ == "__main__":
     print("Begin export data, save directory: %s" % args.save_dir)
 
     export = ExportCodeData(args)
-    export.export_data(os.path.join(args.save_dir, "features"))
+    try:
+        export.export_data(os.path.join(args.save_dir, "features"))
+    finally:
+        export.close()  # 确保连接被关闭
 
     print("End export data")
