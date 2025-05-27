@@ -119,7 +119,7 @@ class ExportCodeData(object):
             self._preprocess_index_weight(code)
 
             with self.engine.connect() as conn:
-                df = pd.read_sql(text(QUERY_SQL), conn, params=(code, code))
+                df = pd.read_sql(QUERY_SQL, conn, params=(code, code))
 
             with open("%s/%s.csv" % (save_dir, code), "w", newline="") as csvfile:
                 writer = csv.writer(
