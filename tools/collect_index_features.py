@@ -107,7 +107,7 @@ class ExportCodeData(object):
             # 6. Optionally write to database
             with self.connection.cursor() as cursor:
                 cursor.execute("DELETE FROM ts_idx_index_weight_daily")
-            df_filled.to_sql('ts_idx_index_weight_daily', engine, index=False, if_exists='append', chunksize=1000)
+            df_filled.to_sql('ts_idx_index_weight_daily', engine, index=False, if_exists='append')
         except pymysql.Error as e:
             print(f"Database error: {e}")
             raise
