@@ -29,7 +29,7 @@ WITH up_stats AS (
            AVG(CASE WHEN q.pct_chg > 0 THEN 1.0 ELSE 0.0 END) AS up_ratio
     FROM ts_idx_index_weight_daily AS w
     JOIN ts_quotation_daily AS q
-    ON w.ts_code COLLATE utf8mb4_unicode_ci = q.ts_code COLLATE utf8mb4_unicode_ci
+    ON w.ts_code = q.ts_code
     AND w.trade_date = q.trade_date
     WHERE w.index_code = %s
     GROUP BY w.trade_date
@@ -80,13 +80,7 @@ class ExportCodeData(object):
         """
         try:
             # 1. Initialize database connection using SQLAlchemy for better performance
-            engine = create_engine(
-                "mysql+pymysql://zcs:2025zcsdaydayup@127.0.0.1/stock_info"
-                "?charset=utf8mb4",
-                connect_args={"charset": "utf8mb4"},
-            )
-            with engine.connect() as conn:
-                conn.execute(text("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"))
+            engine = create_engine("mysql+pymysql://zcs:2025zcsdaydayup@127.0.0.1/stock_info")
     
             # 2. Fetch data efficiently with parameterized queries
             query_weight = "SELECT index_code, ts_code, trade_date, weight FROM ts_idx_index_weight WHERE index_code = %s"
