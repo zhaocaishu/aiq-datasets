@@ -79,7 +79,7 @@ class ExportCodeData(object):
             group = group.reindex(calendar, method='ffill')  # 前向填充
             group['index_code'] = index_code
             group['ts_code'] = ts_code
-            group = group.reset_index().rename(columns={'index': 'trade_date'})
+            group = group.reset_index().rename(columns={'cal_date': 'trade_date'})
             filled_list.append(group)
         
         # 4. 合并结果
