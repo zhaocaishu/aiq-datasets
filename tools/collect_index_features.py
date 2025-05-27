@@ -105,9 +105,16 @@ class ExportCodeData(object):
             df_filled = df_filled.dropna(subset=['weight'])
     
             # 6. Optionally write to database
-            with self.connection.cursor() as cursor:
-                cursor.execute("DELETE FROM ts_idx_index_weight_daily")
-            df_filled.to_sql('ts_idx_index_weight_daily', engine, index=False, if_exists='append')
+            with engine.begin() as conn:  # 自动提交事务
+                conn.execute("DELETE FROM ts_idx_index_weight_daily")
+            
+            df_filled.to_sql(
+                name='ts_idx_index_weight_daily',
+                con=engine,
+                index=False,
+                if_exists='append',  # 表存在就追加
+                method='multi'       # 批量插入，提升性能
+            )
         except pymysql.Error as e:
             print(f"Database error: {e}")
             raise
