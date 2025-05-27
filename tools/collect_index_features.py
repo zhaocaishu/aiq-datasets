@@ -107,20 +107,13 @@ class ExportCodeData(object):
             # 6. Optionally write to database
             with engine.begin() as conn:  # 自动提交事务
                 conn.execute("DELETE FROM ts_idx_index_weight_daily")
-            
-            df_filled.to_sql(
-                name='ts_idx_index_weight_daily',
-                con=engine,
-                index=False,
-                if_exists='append',  # 表存在就追加
-                method='multi'       # 批量插入，提升性能
-            )
-        except pymysql.Error as e:
-            print(f"Database error: {e}")
-            raise
-        except Exception as e:
-            print(f"Error during preprocessing: {e}")
-            raise
+                df_filled.to_sql(
+                    name='ts_idx_index_weight_daily',
+                    con=engine,
+                    index=False,
+                    if_exists='append',  # 表存在就追加
+                    method='multi'       # 批量插入，提升性能
+                )
         finally:
             engine.dispose()  # Ensure proper cleanup
 
