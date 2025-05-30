@@ -18,28 +18,13 @@ HEADER = [
     "Change",
     "Pct_Chg",
     "Volume",
-    "AMount",
-    "UPratio",
+    "AMount"
 ]
 
 QUERY_SQL = """
-WITH up_stats AS (
-    SELECT w.trade_date,
-           AVG(CASE WHEN q.pct_chg > 0 THEN 1.0 ELSE 0.0 END) AS up_ratio
-    FROM ts_idx_index_weight_daily AS w
-    JOIN ts_quotation_daily AS q
-    ON w.ts_code = q.ts_code
-    AND w.trade_date = q.trade_date
-    WHERE w.index_code = %s
-    GROUP BY w.trade_date
-)
-
-SELECT d.*,
-       u.up_ratio AS up_ratio
-FROM ts_idx_index_daily AS d
-JOIN up_stats AS u
-ON d.trade_date = u.trade_date
-WHERE d.index_code = %s
+SELECT *
+FROM ts_idx_index_daily
+WHERE index_code = %s
 """
 
 
