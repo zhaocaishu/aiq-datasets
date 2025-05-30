@@ -21,12 +21,6 @@ HEADER = [
     "AMount"
 ]
 
-QUERY_SQL = """
-SELECT *
-FROM ts_idx_index_daily
-WHERE index_code = %s
-"""
-
 
 class ExportCodeData(object):
     def __init__(self, args):
@@ -34,55 +28,6 @@ class ExportCodeData(object):
 
     def __init_db(self, host, user, passwd):
         self.engine = create_engine("mysql+pymysql://zcs:2025zcsdaydayup@127.0.0.1/stock_info")
-
-    def _preprocess_index_weight(self, code: str) -> pd.DataFrame:
-        """
-        Preprocess index weight data by forward-filling weights across all trading days.
-    
-        Args:
-            code (str): Index code to filter the data.
-    
-        Returns:
-            pd.DataFrame: Processed DataFrame with filled weights.
-    
-        Raises:
-            pymysql.Error: If database operations fail.
-        """
-        # Fetch data efficiently with parameterized queries
-        query_weight = "SELECT index_code, ts_code, trade_date, weight FROM ts_idx_index_weight WHERE index_code = %s"
-        query_cal = "SELECT cal_date FROM ts_basic_trade_cal WHERE is_open = 1 ORDER BY cal_date"
-        
-        with self.engine.connect() as conn:
-            df_weight = pd.read_sql(query_weight, conn, params=(code,))
-            df_cal = pd.read_sql(query_cal, conn)
-
-        # Create unique, sorted trading calendar
-        calendar = df_cal['cal_date'].drop_duplicates().sort_values()
-        
-        # Create a MultiIndex for reindexing
-        filled_dfs = []
-        groups = df_weight.groupby(['index_code', 'ts_code'])
-        for (index_code, ts_code), group in groups:
-            group = group.set_index('trade_date')[['weight']].reindex(calendar, method='ffill')
-            group = group.reset_index().assign(index_code=index_code, ts_code=ts_code)
-            filled_dfs.append(group)
-
-        # Concatenate results
-        df_filled = pd.concat(filled_dfs, ignore_index=True)[['index_code', 'ts_code', 'cal_date', 'weight']]
-        df_filled.rename(columns={'cal_date': 'trade_date'}, inplace=True)
-        df_filled = df_filled.dropna(subset=['weight'])
-
-        # Optionally write to database
-        with self.engine.begin() as conn:  # 自动提交事务
-            conn.execute(text("DELETE FROM ts_idx_index_weight_daily"))
-            df_filled.to_sql(
-                name='ts_idx_index_weight_daily',
-                con=conn,
-                index=False,
-                if_exists='append',  # 表存在就追加
-                method='multi',       # 批量插入，提升性能
-                chunksize=1000
-            )
 
     def export_data(self, save_dir):
         """导出数据到文件
@@ -94,18 +39,15 @@ class ExportCodeData(object):
             os.makedirs(save_dir)
 
         # 上市的全部指数代码
-        codes = ["000300.SH", "000903.SH", "000905.SH"]
+        codes = ["000300.SH", "000903.SH", "000905.SH", "000906.SH"]
 
         # 从数据库导出数据
         for code in codes:
             # 查询数据
             print("Exporting %s" % code)
 
-            # 将指数权重按日补充完整
-            self._preprocess_index_weight(code)
-
             with self.engine.connect() as conn:
-                df = pd.read_sql(QUERY_SQL, conn, params=(code, code))
+                df = pd.read_sql("SELECT * FROM ts_idx_index_daily WHERE index_code = %s", conn, params=(code,))
 
             with open("%s/%s.csv" % (save_dir, code), "w", newline="") as csvfile:
                 writer = csv.writer(
