@@ -31,16 +31,13 @@ def fetch_listed_stocks(connection) -> Dict[str, Tuple[str, str, str]]:
         JOIN (
             SELECT ts_code,
                    l1_name,
-                   l2_name,
-                   ROW_NUMBER() OVER (PARTITION BY ts_code ORDER BY in_date DESC) AS rn
-            FROM ts_idx_index_member_all
-            WHERE is_new = 'Y'
+                   l2_name
+            FROM ts_idx_index_member_all_sw
         ) industry
-        ON basic.ts_code = industry.ts_code AND industry.rn = 1
+        ON basic.ts_code = industry.ts_code
         WHERE basic.market IN ('主板', '中小板', '创业板', '科创板')
         AND basic.list_status = 'L'
         AND basic.name NOT LIKE '%ST%'
-        AND industry.rn = 1
     """
 
     with connection.cursor() as cursor:
