@@ -24,7 +24,7 @@ def fetch_listed_stocks(connection) -> Dict[str, Tuple[str, str, str]]:
     query = """
         SELECT basic.ts_code,
                basic.market,
-               TRIM(REPLACE(industry.l1_name, 'Ⅱ', '')) AS l1_name,
+               TRIM(industry.l1_name) AS l1_name,
                TRIM(REPLACE(industry.l2_name, 'Ⅱ', '')) AS l2_name,
                DATE_FORMAT(basic.list_date, '%Y-%m-%d') AS list_date
         FROM ts_basic_stock_list basic
