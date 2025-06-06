@@ -23,7 +23,7 @@ def save_to_mysql(df, table_name, db_uri):
     """将数据写入MySQL数据库表"""
     engine = create_engine(db_uri)
     try:
-        df.to_sql(name=table_name, con=engine, if_exists='replace', index=False)
+        df.to_sql(name=table_name, con=engine, if_exists='append', index=False)
     finally:
         engine.dispose()
 
