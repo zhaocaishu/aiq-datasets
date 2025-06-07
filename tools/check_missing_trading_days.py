@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
         # 找出差异
         missing_dates = trading_days - data_dates  # 数据缺失的交易日
-        miss_stock_cnt += (len(missing_dates) > 0)
+        miss_stock_cnt += len(missing_dates) > 0
         miss_trading_days += len(missing_dates)
         total_trading_days += len(trading_days)
 

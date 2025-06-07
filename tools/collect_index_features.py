@@ -4,8 +4,7 @@ import argparse
 import csv
 import pandas as pd
 
-import pymysql
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 
 HEADER = [
     "Instrument",
@@ -18,7 +17,7 @@ HEADER = [
     "Change",
     "Pct_Chg",
     "Volume",
-    "AMount"
+    "AMount",
 ]
 
 
@@ -27,7 +26,9 @@ class ExportCodeData(object):
         self.__init_db(args.host, args.user, args.passwd)
 
     def __init_db(self, host, user, passwd):
-        self.engine = create_engine("mysql+pymysql://zcs:2025zcsdaydayup@127.0.0.1/stock_info")
+        self.engine = create_engine(
+            "mysql+pymysql://zcs:2025zcsdaydayup@127.0.0.1/stock_info"
+        )
 
     def export_data(self, save_dir):
         """导出数据到文件
@@ -47,7 +48,11 @@ class ExportCodeData(object):
             print("Exporting %s" % code)
 
             with self.engine.connect() as conn:
-                df = pd.read_sql("SELECT * FROM ts_idx_index_daily WHERE index_code = %s", conn, params=(code,))
+                df = pd.read_sql(
+                    "SELECT * FROM ts_idx_index_daily WHERE index_code = %s",
+                    conn,
+                    params=(code,),
+                )
 
             with open("%s/%s.csv" % (save_dir, code), "w", newline="") as csvfile:
                 writer = csv.writer(
