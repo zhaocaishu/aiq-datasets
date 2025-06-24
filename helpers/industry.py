@@ -34,6 +34,7 @@ class IndustryL1(Enum):
     医药生物 = auto()
     有色金属 = auto()
 
+
 class IndustryL2(Enum):
     种植业 = 0
     渔业 = auto()
@@ -170,16 +171,17 @@ class IndustryL2(Enum):
     社交 = auto()
     本地生活服务 = auto()
 
-if __name__ == '__main__':
-    category_name_l1 = '银行'
+
+if __name__ == "__main__":
+    category_name_l1 = "银行"
     category_id_l1 = getattr(IndustryL1, category_name_l1, None)
 
     if category_id_l1 is not None:
         print(category_id_l1.value)
     else:
         print("一级类别不存在")
-    
-    category_name_l2 = '林业'
+
+    category_name_l2 = "林业"
     category_id_l2 = getattr(IndustryL2, category_name_l2, None)
 
     if category_id_l2 is not None:
