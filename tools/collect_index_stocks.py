@@ -39,7 +39,7 @@ class ExportCodeData(object):
             # 查询数据
             query = (
                 "SELECT DISTINCT ts_code, trade_date "
-                "FROM ts_idx_index_weight WHERE index_code=%s"
+                "FROM ts_idx_index_cons WHERE index_code=%s"
             )
 
             print(query)
