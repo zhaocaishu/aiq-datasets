@@ -22,7 +22,7 @@ def process_file(filepath):
     ts_code = os.path.splitext(os.path.basename(filepath))[0]
     df = pd.read_csv(filepath)
     df["trade_time"] = pd.to_datetime(df["trade_time"])
-    df["trade_time"].dt.strftime("%Y%m%d")
+    df["trade_date"] = df["trade_time"].dt.strftime("%Y%m%d")
 
     def calc_intraday_features(group):
         total_vol = group["vol"].sum()
