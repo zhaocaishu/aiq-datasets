@@ -40,6 +40,8 @@ HEADER = [
     "Ind_class_l1",
     "Ind_class_l2",
     "List_date",
+    "Tail_ratio",
+    "Vwap",
 ]
 
 
@@ -80,7 +82,7 @@ class ExportCodeData(object):
                     "daily_basic.volume_ratio, daily_basic.pe, daily_basic.pe_ttm, "
                     "daily_basic.pb, daily_basic.ps, daily_basic.ps_ttm, daily_basic.dv_ratio, "
                     "daily_basic.dv_ttm, daily_basic.total_share, daily_basic.float_share, daily_basic.free_share, "
-                    "daily_basic.total_mv, daily_basic.circ_mv, factor.adj_factor "
+                    "daily_basic.total_mv, daily_basic.circ_mv, factor.adj_factor, intraday.tail_ratio, intraday.vwap "
                     "FROM ts_quotation_daily daily "
                     "JOIN ts_quotation_daily_basic daily_basic ON "
                     "daily.ts_code=daily_basic.ts_code AND "
@@ -88,6 +90,9 @@ class ExportCodeData(object):
                     "JOIN ts_quotation_adj_factor factor ON "
                     "daily.ts_code=factor.ts_code AND "
                     "daily.trade_date=factor.trade_date "
+                    "JOIN ts_quotation_intraday_daily intraday ON "
+                    "daily.ts_code=intraday.ts_code AND "
+                    "daily.trade_date=intraday.trade_date "
                     "WHERE daily.ts_code='%s' LIMIT 50000" % code
                 )
 
