@@ -36,12 +36,12 @@ HEADER = [
     "Total_mv",
     "Circ_mv",
     "Adj_factor",
+    "Tail_ratio",
+    "Vwap",
     "Mkt_class",
     "Ind_class_l1",
     "Ind_class_l2",
     "List_date",
-    "Tail_ratio",
-    "Vwap",
 ]
 
 
