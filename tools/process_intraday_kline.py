@@ -13,19 +13,15 @@ def process_file(filepath: Path) -> pd.DataFrame:
     # 读取并预处理
     df = pd.read_csv(filepath, parse_dates=["trade_time"] )
     df["trade_date"] = df["trade_time"].dt.strftime("%Y%m%d")
-    # 典型价
-    df["typical_price"] = (df[["high", "low", "close"]].sum(axis=1)) / 3
 
     # 计算每日特征
     def _daily(group: pd.DataFrame) -> pd.Series:
         total_vol = group["vol"].sum()
         tail_vol = group["vol"].iloc[-6:].sum()
-        vwap = (group["typical_price"] * group["vol"]).sum() / total_vol if total_vol else None
         return pd.Series({
             "total_vol": total_vol,
             "tail_vol": tail_vol,
-            "tail_ratio": tail_vol / total_vol if total_vol else 0,
-            "vwap": vwap,
+            "tail_ratio": tail_vol / total_vol if total_vol else 0
         })
 
     daily = (
