@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 # 1. 配置：数据目录、输出路径和窗口长度 T
 DATA_DIR = Path("/Users/darren/Downloads/a股5分钟")
-OUTPUT_PATH = Path("ts_quotation_intraday_Tday.csv")
+OUTPUT_PATH = Path("ts_quotation_intraday_daily.csv")
 T_DAYS = 5  # 最近T天窗口
 
 # 2. 单文件处理函数
