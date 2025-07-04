@@ -113,7 +113,7 @@ class ExportCodeData(object):
                             t_date[0:4] + "-" + t_date[4:6] + "-" + t_date[6:8]
                         )
 
-                        # add market class
+                        # market class
                         market_name = stocks[code][0]
                         if market_name in ("科创板", "创业板"):
                             market_class = 0
@@ -123,7 +123,7 @@ class ExportCodeData(object):
                             raise ValueError(f"Unknown market name: {market_name}")
                         list_row.append(market_class)
 
-                        # add industry class
+                        # industry class
                         ind_class_l1 = getattr(IndustryL1, stocks[code][1], None)
                         ind_class_l2 = getattr(IndustryL2, stocks[code][2], None)
 
@@ -133,7 +133,7 @@ class ExportCodeData(object):
                         list_row.append(ind_class_l1.value)
                         list_row.append(ind_class_l2.value)
 
-                        # add list date
+                        # list date
                         list_date = stocks[code][3]
                         list_row.append(list_date)
 
