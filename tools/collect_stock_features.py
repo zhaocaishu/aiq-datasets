@@ -133,7 +133,9 @@ class ExportCodeData(object):
                         list_row.append(ind_class_l1.value)
                         list_row.append(ind_class_l2.value)
 
-                        list_row.append(stocks[code][3])
+                        # add list date
+                        list_date = stocks[code][3]
+                        list_row.append(list_date)
 
                         writer.writerow(list_row)
 
