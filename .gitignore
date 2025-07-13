@@ -1,1 +1,4 @@
 .idea
+.DS_Store
+aiq_datasets.egg-info/
+build/

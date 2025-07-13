@@ -2,19 +2,32 @@ import argparse
 import pandas as pd
 from sqlalchemy import create_engine
 
-from helpers.db_constants import QUOTATION_INTRADAY_COLUMN_MAP, QUOTATION_INTRADAY_TABLE_NAME
+from helpers.db_constants import (
+    INDUSTRY_CONS_COLUMN_MAP,
+    INDUSTRY_CONS_TABLE_NAME,
+)
 
 # 配置常量
 DB_URI = "mysql+pymysql://zcs:2025zcsdaydayup@146.56.231.251/stock_info"
 
 
-def load_local_file(filepath, column_map):
-    """读取行业分类Excel/CSV文件并重命名字段"""
-    if filepath.endswith(".csv"):
-        df = pd.read_csv(filepath, usecols=column_map.keys())
-    else:
-        df = pd.read_excel(filepath, usecols=column_map.keys())
-    return df.rename(columns=column_map)
+def load_local_file(filepath: str, column_map: dict = None) -> pd.DataFrame:
+    # 判断文件格式
+    is_csv = filepath.lower().endswith(".csv")
+    read_func = pd.read_csv if is_csv else pd.read_excel
+
+    # 确定是否指定列
+    read_kwargs = {}
+    if column_map:
+        read_kwargs["usecols"] = list(column_map.keys())
+
+    df = read_func(filepath, **read_kwargs)
+
+    # 重命名列名（如果需要）
+    if column_map:
+        df = df.rename(columns=column_map)
+
+    return df
 
 
 def save_to_table(df, table_name, db_uri):
@@ -31,5 +44,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="上传文件到数据库表")
     parser.add_argument("--src_file", required=True, type=str, help="input file")
     args = parser.parse_args()
-    df = load_local_file(args.src_file, QUOTATION_INTRADAY_COLUMN_MAP)
-    save_to_table(df, QUOTATION_INTRADAY_TABLE_NAME, DB_URI)
+    df = load_local_file(args.src_file, INDUSTRY_CONS_COLUMN_MAP)
+    save_to_table(df, INDUSTRY_CONS_TABLE_NAME, DB_URI)
