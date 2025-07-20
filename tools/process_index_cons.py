@@ -12,7 +12,7 @@ def get_trading_calendar(start_date, end_date):
 
 
 if __name__ == "__main__":
-    index_code = "000903.SH"
+    index_code = "000985.SH"
     df_detail = pd.read_excel(
         f"/Users/darren/Downloads/成分详情({index_code}).xls",
         usecols=["证券代码"],

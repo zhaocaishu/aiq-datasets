@@ -3,8 +3,8 @@ import pandas as pd
 from sqlalchemy import create_engine
 
 from helpers.db_constants import (
-    INDUSTRY_CONS_COLUMN_MAP,
-    INDUSTRY_CONS_TABLE_NAME,
+    INDEX_CONS_COLUMN_MAP,
+    INDEX_CONS_TABLE_NAME,
 )
 
 # 配置常量
@@ -44,5 +44,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="上传文件到数据库表")
     parser.add_argument("--src_file", required=True, type=str, help="input file")
     args = parser.parse_args()
-    df = load_local_file(args.src_file, INDUSTRY_CONS_COLUMN_MAP)
-    save_to_table(df, INDUSTRY_CONS_TABLE_NAME, DB_URI)
+    df = load_local_file(args.src_file, INDEX_CONS_COLUMN_MAP)
+    save_to_table(df, INDEX_CONS_TABLE_NAME, DB_URI)
