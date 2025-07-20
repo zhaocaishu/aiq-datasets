@@ -22,6 +22,68 @@ def fetch_listed_stocks(connection) -> Dict[str, Tuple[str, str, str]]:
     stocks = {}
 
     query = """
+        WITH 
+        -- 步骤1: 为每个交易所生成连续的交易日序号
+        calendar_with_seq AS (
+            SELECT 
+                exchange, 
+                cal_date, 
+                ROW_NUMBER() OVER (PARTITION BY exchange ORDER BY cal_date) AS trade_seq
+            FROM ts_basic_trade_cal
+            WHERE is_open = '1'  -- 只考虑交易日
+        ),
+        -- 步骤2: 关联停盘记录并添加交易日序号
+        suspended_stocks AS (
+            SELECT 
+                s.ts_code,
+                s.trade_date,
+                SUBSTRING_INDEX(s.ts_code, '.', -1) AS exchange_suffix,  -- 提取股票后缀(SH/SZ/BJ)
+                CASE 
+                    WHEN SUBSTRING_INDEX(s.ts_code, '.', -1) = 'SH' THEN 'SSE'
+                    WHEN SUBSTRING_INDEX(s.ts_code, '.', -1) = 'SZ' THEN 'SZSE'
+                    WHEN SUBSTRING_INDEX(s.ts_code, '.', -1) = 'BJ' THEN 'BSE'
+                END AS exchange,  -- 映射为交易所代码
+                c.trade_seq
+            FROM ts_quotation_suspend_d s
+            JOIN calendar_with_seq c ON 
+                c.cal_date = s.trade_date AND
+                c.exchange = CASE 
+                    WHEN SUBSTRING_INDEX(s.ts_code, '.', -1) = 'SH' THEN 'SSE'
+                    WHEN SUBSTRING_INDEX(s.ts_code, '.', -1) = 'SZ' THEN 'SZSE'
+                    WHEN SUBSTRING_INDEX(s.ts_code, '.', -1) = 'BJ' THEN 'BSE'
+                END
+            WHERE s.suspend_type = 'S'  -- 只处理停盘记录
+        ),
+        -- 步骤3: 标记连续停盘的断点
+        group_markers AS (
+            SELECT 
+                *,
+                CASE 
+                    WHEN trade_seq - LAG(trade_seq, 1) OVER (PARTITION BY ts_code ORDER BY trade_date) = 1 
+                    THEN 0 
+                    ELSE 1 
+                END AS is_new_group
+            FROM suspended_stocks
+        ),
+        -- 步骤4: 计算连续停盘的分组ID
+        group_ids AS (
+            SELECT 
+                *,
+                SUM(is_new_group) OVER (PARTITION BY ts_code ORDER BY trade_date) AS group_id
+            FROM group_markers
+        ),
+        -- 步骤5: 计算每组连续停盘的天数及日期范围
+        stock_suspend_days AS (
+            SELECT 
+                ts_code,
+                MIN(trade_date) AS start_date,  -- 连续停盘起始日
+                MAX(trade_date) AS end_date,    -- 连续停盘结束日
+                COUNT(*) AS suspend_days        -- 连续停盘天数
+            FROM group_ids
+            GROUP BY ts_code, group_id
+            ORDER BY ts_code, start_date
+        )
+        -- 步骤6: 去除ST/*ST、连续停盘天数大于90天的股票
         SELECT basic.ts_code,
                basic.market,
                TRIM(industry.l1_name) AS l1_name,
@@ -32,12 +94,23 @@ def fetch_listed_stocks(connection) -> Dict[str, Tuple[str, str, str]]:
             SELECT ts_code,
                    l1_name,
                    l2_name
-            FROM ts_idx_index_member_all_sw
+            FROM ts_idx_industry_cons
         ) industry
         ON basic.ts_code = industry.ts_code
+        LEFT JOIN ts_basic_namechange AS nc
+        ON basic.ts_code = nc.ts_code
+        AND nc.change_reason IN ('ST', '*ST')
+        LEFT JOIN (
+            SELECT ts_code,
+                   MAX(suspend_days) AS suspend_days
+            FROM stock_suspend_days
+            GROUP BY ts_code
+        ) suspend
+        ON basic.ts_code = suspend.ts_code
         WHERE basic.market IN ('主板', '创业板', '科创板')
         AND basic.list_status = 'L'
-        AND basic.name NOT LIKE '%ST%'
+        AND nc.ts_code IS NULL
+        AND COALESCE(suspend.suspend_days, 0) <= 90
     """
 
     with connection.cursor() as cursor:

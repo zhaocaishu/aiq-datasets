@@ -38,7 +38,7 @@ def process_file(filepath: Path) -> pd.DataFrame:
     daily["tail_ratio"] = daily["tail_sum_T"] / daily["vol_sum_T"]
 
     daily.insert(0, "ts_code", ts_code)
-    return daily[["ts_code", "trade_date", "total_vol", "tail_vol", "tail_sum_T", "vol_sum_T", "tail_ratio"]]
+    return daily.loc[:, ["ts_code", "trade_date", "total_vol", "tail_vol", "tail_sum_T", "vol_sum_T", "tail_ratio"]]
 
 # 3. 主函数：并行处理并合并
 if __name__ == "__main__":
