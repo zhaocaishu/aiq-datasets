@@ -5,7 +5,7 @@ import csv
 
 import mysql.connector
 
-HEADER = ["Exchange", "Trade_date"]
+HEADER = ["Exchange", "Date"]
 
 
 class ExportCodeData(object):
