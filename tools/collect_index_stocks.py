@@ -38,7 +38,7 @@ class ExportCodeData(object):
         with self.connection.cursor() as cursor:
             # 查询数据
             query = (
-                "SELECT DISTINCT ts_code, trade_date "
+                "SELECT DISTINCT ts_code, date_format(trade_date, '%Y-%m-%d') "
                 "FROM ts_idx_index_cons WHERE index_code=%s"
             )
 
