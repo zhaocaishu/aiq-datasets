@@ -72,6 +72,10 @@ class ExportCodeData(object):
     
                     for row in cursor:
                         list_row = list(row)
+                        t_date = list_row[1]
+                        list_row[1] = (
+                            t_date[0:4] + "-" + t_date[4:6] + "-" + t_date[6:8]
+                        )
                         writer.writerow(list_row)
 
     def close(self):
