@@ -49,7 +49,7 @@ class ExportCodeData(object):
 
             with self.engine.connect() as conn:
                 df = pd.read_sql(
-                    "SELECT * FROM ts_idx_index_daily_choice WHERE index_code = %s",
+                    "SELECT * FROM ts_idx_index_daily WHERE index_code = %s",
                     conn,
                     params=(code,),
                 )
