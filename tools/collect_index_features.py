@@ -69,7 +69,7 @@ class ExportCodeData(object):
                     )
                     writer.writerow(HEADER)
     
-                    for _, row in df.iterrows():
+                    for row in cursor:
                         list_row = list(row)
                         writer.writerow(list_row)
 
