@@ -2,3 +2,5 @@
 .DS_Store
 aiq_datasets.egg-info/
 build/
+.vscode/
+data/

@@ -1,26 +1,19 @@
-from setuptools import find_packages, setup
+from setuptools import setup, find_packages
 
-
-def requirements(path):
-    with open(path, 'r') as fd:
-        return [r.strip() for r in fd.readlines()]
-
+# Function to read the requirements.txt file
+def load_requirements(filename='requirements.txt'):
+    with open(filename, 'r') as f:
+        return [line.strip() for line in f if line.strip() and not line.startswith('#')]
 
 def readme():
     with open('README.md', encoding='utf-8') as f:
         return f.read()
 
-
 setup(
-    name="aiq-datasets",
-    packages=find_packages(exclude=(
-        'tests',
-        'tools',
-        'docs',
-        'examples',
-        'requirements',
-        '*.egg-info',
-    )),
+    name='aiq-datasets',
+    version='0.1.0',
+    packages=find_packages(),
+    install_requires=load_requirements(),
     author="darrenwang",
     author_email="wangyang9113@gmail.com",
     description="aiq datasets",
