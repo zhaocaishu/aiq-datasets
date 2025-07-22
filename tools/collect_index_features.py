@@ -40,7 +40,7 @@ class ExportCodeData(object):
             os.makedirs(save_dir)
 
         # 上市的全部指数代码
-        codes = ["000300.SH", "000903.SH", "000905.SH", "000906.SH"]
+        codes = ["000903.SH", "000300.SH", "000905.SH", "000906.SH", "000852.SH", "000985.SH"]
 
         # 从数据库导出数据
         for code in codes:
