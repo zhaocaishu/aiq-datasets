@@ -25,9 +25,16 @@ class ExportCodeData(object):
         self.__init_db(args.host, args.user, args.passwd)
 
     def __init_db(self, host, user, passwd):
-        self.engine = create_engine(
-            "mysql+pymysql://zcs:2025zcsdaydayup@127.0.0.1/stock_info"
+        """init db, and show tables"""
+        self.connection = mysql.connector.connect(
+            host=host, user=user, passwd=passwd, database="stock_info"
         )
+
+        with self.connection.cursor() as cursor:
+            cursor.execute("SHOW TABLES")
+
+            for table in cursor:
+                print(table)
 
     def export_data(self, save_dir):
         """导出数据到文件
@@ -46,26 +53,29 @@ class ExportCodeData(object):
             # 查询数据
             print("Exporting %s" % code)
 
-            with self.engine.connect() as conn:
-                df = pd.read_sql(
-                    "SELECT * FROM ts_idx_index_daily WHERE index_code = %s",
-                    conn,
-                    params=(code,),
+            with self.connection.cursor() as cursor:
+                # 查询数据
+                query = (
+                    "SELECT * FROM ts_idx_index_daily WHERE index_code = %s" % code
                 )
+    
+                print(query)
+    
+                cursor.execute(query, (index_name,))
 
-            with open("%s/%s.csv" % (save_dir, code), "w", newline="") as csvfile:
-                writer = csv.writer(
-                    csvfile, delimiter=",", quotechar="|", quoting=csv.QUOTE_MINIMAL
-                )
-                writer.writerow(HEADER)
-
-                for _, row in df.iterrows():
-                    list_row = list(row)
-                    writer.writerow(list_row)
+                with open("%s/%s.csv" % (save_dir, code), "w", newline="") as csvfile:
+                    writer = csv.writer(
+                        csvfile, delimiter=",", quotechar="|", quoting=csv.QUOTE_MINIMAL
+                    )
+                    writer.writerow(HEADER)
+    
+                    for _, row in df.iterrows():
+                        list_row = list(row)
+                        writer.writerow(list_row)
 
     def close(self):
         """关闭数据库连接"""
-        self.engine.dispose()
+        self.connection.close()
 
 
 if __name__ == "__main__":
