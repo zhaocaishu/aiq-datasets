@@ -13,6 +13,7 @@ HEADER = [
     "Open",
     "High",
     "Low",
+    "Pre_Close",
     "Change",
     "Pct_Chg",
     "Volume",
