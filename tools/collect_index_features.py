@@ -56,7 +56,7 @@ class ExportCodeData(object):
             with self.connection.cursor() as cursor:
                 # 查询数据
                 query = (
-                    "SELECT * FROM ts_idx_index_daily WHERE index_code = %s" % code
+                    "SELECT * FROM ts_idx_index_daily WHERE index_code = '%s'" % code
                 )
     
                 print(query)
