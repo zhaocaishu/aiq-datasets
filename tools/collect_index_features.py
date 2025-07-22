@@ -17,7 +17,6 @@ HEADER = [
     "Pct_Chg",
     "Volume",
     "AMount",
-    "Turnover_rate"
 ]
 
 
