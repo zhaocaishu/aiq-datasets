@@ -3,7 +3,7 @@ from typing import Dict, Tuple
 
 def fetch_listed_stocks(connection) -> Dict[str, Tuple[str, str, str]]:
     """
-    从数据库中筛选当前状态为“正常上市”的A股股票（覆盖主板、创业板、科创板），并提取其股票代码、所属板块、一级行业、二级行业及上市日期等信息。
+    筛选当前状态为“正常上市”的A股股票（覆盖主板、创业板、科创板），并提取其股票代码、所属板块、一级行业、二级行业及上市日期等信息。
 
     Args:
         connection: 数据库连接对象
