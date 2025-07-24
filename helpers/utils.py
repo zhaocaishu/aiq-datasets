@@ -41,8 +41,12 @@ def fetch_listed_stocks(connection) -> Dict[str, Tuple[str, str, str]]:
 
     with connection.cursor() as cursor:
         cursor.execute(query)
-        for ts_code, market, industry_l1, industry_l2, list_date in cursor.fetchall():
-            stocks[ts_code] = (market, industry_l1, industry_l2, list_date)
+        # stocks will map ts_code → (market, industry_l1, industry_l2, list_date)
+        stocks = {
+            ts_code: (market, industry_l1, industry_l2, list_date)
+            for ts_code, market, industry_l1, industry_l2, list_date
+            in cursor
+        }
 
     print(f"合计 {len(stocks)} 个上市股票代码")
     return stocks
