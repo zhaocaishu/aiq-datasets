@@ -70,4 +70,4 @@ if __name__ == "__main__":
     if not result_df.empty:
         result_df.to_csv(output_path, mode="a", header=False, index=False)
 
-    print(f"数据已完成抓取并保存至{output_path}")
+    print(f"股票状态数据已完成抓取并保存至{output_path}")
