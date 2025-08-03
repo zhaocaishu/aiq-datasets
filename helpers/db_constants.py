@@ -21,17 +21,17 @@ CREATE TABLE ts_idx_industry_cons (
 
 # 申万行业成分表字段映射
 INDUSTRY_CONS_COLUMN_MAP = {
-  "L1代码": "l1_code",
-  "L1名称": "l1_name",
-	"L2代码": "l2_code",
-  "L2名称": "l2_name",
-	"L3代码": "l3_code",
-  "L3名称": "l3_name",
-  "成分股票代码": "ts_code",
-  "成分股票名称": "ts_name",
-  "纳入日期": "in_date",
-  "剔除日期": "out_date",
-  "是否最新Y是N否": "is_new",
+    "L1代码": "l1_code",
+    "L1名称": "l1_name",
+    "L2代码": "l2_code",
+    "L2名称": "l2_name",
+    "L3代码": "l3_code",
+    "L3名称": "l3_name",
+    "成分股票代码": "ts_code",
+    "成分股票名称": "ts_name",
+    "纳入日期": "in_date",
+    "剔除日期": "out_date",
+    "是否最新Y是N否": "is_new",
 }
 
 # 指数成分表名
@@ -52,42 +52,6 @@ INDEX_CONS_COLUMN_MAP = {
     "指数代码": "index_code",
     "证券代码": "ts_code",
     "交易日期": "trade_date",
-}
-
-# 指数日线行情表名
-INDEX_DAILY_TABLE_NAME = "ts_idx_index_daily_choice"
-
-# 指数日线行情表DDL
-INDEX_DAILY_TABLE_DDL = """
-CREATE TABLE ts_idx_index_daily_choice (
-  index_code varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '指数代码',
-  trade_date varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '交易日',
-  close float DEFAULT NULL COMMENT '收盘点位',
-  open float DEFAULT NULL COMMENT '开盘点位',
-  high float DEFAULT NULL COMMENT '最高点位',
-  low float DEFAULT NULL COMMENT '最低点位',
-  change float DEFAULT NULL COMMENT '涨跌点',
-  pct_chg float DEFAULT NULL COMMENT '涨跌幅（%）',
-  vol float DEFAULT NULL COMMENT '成交量（万股）',
-  amount float DEFAULT NULL COMMENT '成交额（万元）',
-  turnover float DEFAULT NULL COMMENT '换手率（%）',
-  UNIQUE KEY uni_index_code_trade_date (index_code,trade_date)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='指数日线行情'
-"""
-
-# 指数日线表字段映射
-INDEX_DAILY_COLUMN_MAP = {
-    "指数代码": "index_code",
-    "交易日期": "trade_date",
-    "收盘价": "close",
-    "开盘价": "open",
-    "最高价": "high",
-    "最低价": "low",
-    "涨跌": "change",
-    "涨跌幅(%)": "pct_chg",
-    "成交量(万股)": "vol",
-    "成交额(万元)": "amount",
-    "换手率(%)": "turnover",
 }
 
 # 股票日内特征表名
