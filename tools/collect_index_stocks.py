@@ -39,7 +39,7 @@ class ExportCodeData(object):
             # 查询数据
             query = """
             SELECT a.ts_code,
-                a.trade_date,
+                DATE_FORMAT(a.trade_date, '%Y-%m-%d') AS trade_date,
                 CASE
                     WHEN b.name LIKE '%ST%'
                     OR b.name LIKE '%*ST%' THEN 1
