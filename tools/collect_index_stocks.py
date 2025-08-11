@@ -37,16 +37,16 @@ class ExportCodeData(object):
         # 从数据库导出数据
         with self.connection.cursor() as cursor:
             # 查询数据
-            query = """
-                SELECT a.ts_code,
-                       DATE_FORMAT(a.trade_date, '%Y-%m-%d') AS trade_date
-                FROM ts_idx_index_cons a
-                JOIN ts_bak_basic b ON a.ts_code = b.ts_code
-                AND a.trade_date = b.trade_date
-                WHERE a.index_code = %s
-                AND b.name NOT LIKE '%ST%'
-                AND b.name NOT LIKE '%*ST%';
-            """
+            query = (
+                "SELECT a.ts_code, "
+                "DATE_FORMAT(a.trade_date, '%Y-%m-%d') AS trade_date "
+                "FROM ts_idx_index_cons a "
+                "JOIN ts_bak_basic b ON a.ts_code = b.ts_code "
+                "AND a.trade_date = b.trade_date "
+                "WHERE a.index_code = %s "
+                "AND b.name NOT LIKE '%ST%' "
+                "AND b.name NOT LIKE '%*ST%';"
+            )
 
             print(query)
 
