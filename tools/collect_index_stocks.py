@@ -5,7 +5,7 @@ import csv
 
 import mysql.connector
 
-HEADER = ["Instrument", "Date", "Is_st"]
+HEADER = ["Instrument", "Date"]
 
 
 class ExportCodeData(object):
@@ -39,16 +39,13 @@ class ExportCodeData(object):
             # 查询数据
             query = """
                 SELECT a.ts_code,
-                    DATE_FORMAT(a.trade_date, '%Y-%m-%d') AS trade_date,
-                    CASE
-                        WHEN b.name LIKE '%ST%'
-                        OR b.name LIKE '%*ST%' THEN 1
-                        ELSE 0
-                    END AS is_st
+                       DATE_FORMAT(a.trade_date, '%Y-%m-%d') AS trade_date
                 FROM ts_idx_index_cons a
-                    JOIN ts_bak_basic b ON a.ts_code = b.ts_code
-                    AND a.trade_date = b.trade_date
+                JOIN ts_bak_basic b ON a.ts_code = b.ts_code
+                AND a.trade_date = b.trade_date
                 WHERE a.index_code = %s
+                AND b.name NOT LIKE '%ST%'
+                AND b.name NOT LIKE '%*ST%';
             """
 
             print(query)
