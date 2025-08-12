@@ -84,7 +84,7 @@ class ExportCodeData(object):
                     "daily_basic.volume_ratio, daily_basic.pe, daily_basic.pe_ttm, "
                     "daily_basic.pb, daily_basic.ps, daily_basic.ps_ttm, daily_basic.dv_ratio, "
                     "daily_basic.dv_ttm, daily_basic.total_share, daily_basic.float_share, daily_basic.free_share, "
-                    "daily_basic.total_mv, daily_basic.circ_mv, factor.adj_factor, intraday.tail_ratio, intraday.vwap "
+                    "daily_basic.total_mv, daily_basic.circ_mv, factor.adj_factor, intraday.tail_ratio, intraday.vwap, "
                     "limit.up_limit, limit.down_limit "
                     "FROM ts_quotation_daily daily "
                     "JOIN ts_quotation_daily_basic daily_basic ON "
