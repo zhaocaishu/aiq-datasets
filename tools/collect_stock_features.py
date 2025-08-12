@@ -96,9 +96,9 @@ class ExportCodeData(object):
                     "JOIN ts_quotation_intraday_daily intraday ON "
                     "daily.ts_code=intraday.ts_code AND "
                     "daily.trade_date=intraday.trade_date "
-                    "JOIN ts_quotation_stk_limit limit ON "
-                    "daily.ts_code=limit.ts_code AND "
-                    "daily.trade_date=limit.trade_date "
+                    "JOIN ts_quotation_stk_limit stk_limit ON "
+                    "daily.ts_code=stk_limit.ts_code AND "
+                    "daily.trade_date=stk_limit.trade_date "
                     "WHERE daily.ts_code='%s' LIMIT 50000" % code
                 )
 
