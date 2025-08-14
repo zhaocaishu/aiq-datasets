@@ -40,6 +40,9 @@ HEADER = [
     "Vwap",
     "Up_limit",
     "Down_limit",
+    "Mfd_buyord",
+    "Mfd_sellord",
+    "Mfd_volinflowrate",
     "Mkt_class",
     "Ind_class_l1",
     "Ind_class_l2",
@@ -84,8 +87,9 @@ class ExportCodeData(object):
                     "daily_basic.volume_ratio, daily_basic.pe, daily_basic.pe_ttm, "
                     "daily_basic.pb, daily_basic.ps, daily_basic.ps_ttm, daily_basic.dv_ratio, "
                     "daily_basic.dv_ttm, daily_basic.total_share, daily_basic.float_share, daily_basic.free_share, "
-                    "daily_basic.total_mv, daily_basic.circ_mv, factor.adj_factor, intraday.tail_ratio, intraday.vwap, "
-                    "stk_limit.up_limit, stk_limit.down_limit "
+                    "daily_basic.total_mv, daily_basic.circ_mv, factor.adj_factor, intraday.tail_ratio, intraday.vwap, stk_limit.up_limit, stk_limit.down_limit, "
+                    "(moneyflow.buy_lg_vol + moneyflow.buy_elg_vol), (moneyflow.sell_lg_vol + moneyflow.sell_elg_vol), "
+                    "((moneyflow.buy_lg_amount + moneyflow.buy_elg_amount) - (moneyflow.sell_lg_amount + moneyflow.sell_elg_amount)) / (moneyflow.buy_lg_amount + moneyflow.buy_elg_amount + moneyflow.sell_lg_amount + moneyflow.sell_elg_amount)"
                     "FROM ts_quotation_daily daily "
                     "JOIN ts_quotation_daily_basic daily_basic ON "
                     "daily.ts_code=daily_basic.ts_code AND "
@@ -99,6 +103,9 @@ class ExportCodeData(object):
                     "JOIN ts_quotation_stk_limit stk_limit ON "
                     "daily.ts_code=stk_limit.ts_code AND "
                     "daily.trade_date=stk_limit.trade_date "
+                    "JOIN ts_quotation_moneyflow moneyflow ON "
+                    "daily.ts_code=moneyflow.ts_code AND "
+                    "daily.trade_date=moneyflow.trade_date "
                     "WHERE daily.ts_code='%s' LIMIT 50000" % code
                 )
 
