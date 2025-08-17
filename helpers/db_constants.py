@@ -63,7 +63,10 @@ CREATE TABLE ts_quotation_intraday_daily (
   ts_code varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '股票代码',
   trade_date varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '交易日期',
   tail_ratio float DEFAULT NULL COMMENT '尾盘成交占比',
-  vwap float DEFAULT NULL COMMENT '平均价格',
+  returns_skewness float DEFAULT NULL COMMENT '收益率偏度',
+  returns_kurtosis float DEFAULT NULL COMMENT '收益率峰度',
+  price_vol_corr float DEFAULT NULL COMMENT '量价相关度',
+  downside_ratio float DEFAULT NULL COMMENT '下行波动占比',
   UNIQUE KEY uni_ts_code_trade_date (ts_code,trade_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='股票日内特征'
 """
@@ -73,7 +76,10 @@ QUOTATION_INTRADAY_COLUMN_MAP = {
     "ts_code": "ts_code",
     "trade_date": "trade_date",
     "tail_ratio": "tail_ratio",
-    "vwap": "vwap",
+    "returns_skewness": "returns_skewness",
+    "returns_kurtosis": "returns_kurtosis",
+    "price_vol_corr": "price_vol_corr",
+    "downside_ratio": "downside_ratio",
 }
 
 # 股票基本信息表
