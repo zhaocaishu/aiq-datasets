@@ -1,56 +1,116 @@
-import pandas as pd
+import argparse
 from pathlib import Path
-from concurrent.futures import ProcessPoolExecutor
 from tqdm import tqdm
+from concurrent.futures import ProcessPoolExecutor
 
-# 1. 配置：数据目录、输出路径和窗口长度 T
-DATA_DIR = Path("/Users/darren/Downloads/a股5分钟")
-OUTPUT_PATH = Path("ts_quotation_intraday_daily.csv")
-T_DAYS = 5  # 最近T天窗口
+import numpy as np
+import pandas as pd
+from scipy.stats import skew, kurtosis
 
-# 2. 单文件处理函数
+
 def process_file(filepath: Path) -> pd.DataFrame:
     ts_code = filepath.stem
-    # 读取并预处理
-    df = pd.read_csv(filepath, parse_dates=["trade_time"] )
+    df = pd.read_csv(filepath, parse_dates=["trade_time"])
     df["trade_date"] = df["trade_time"].dt.strftime("%Y%m%d")
 
-    # 计算每日特征
+    def compute_skew_kurtosis(df):
+        df["log_return"] = (df["close"] / df["close"].shift(1)).apply(
+            lambda x: 0 if pd.isna(x) else np.log(x)
+        )
+        returns = df["log_return"].dropna()
+        return skew(returns), kurtosis(returns)
+
+    def compute_price_vol_corr(df):
+        df["log_vol"] = np.log(df["vol"] + 1)
+        return df["close"].corr(df["log_vol"])
+
+    def compute_downside_ratio(df):
+        df["log_return"] = (df["close"] / df["close"].shift(1)).apply(
+            lambda x: 0 if pd.isna(x) else np.log(x)
+        )
+        returns = df["log_return"].dropna()
+        neg_sq_sum = np.sum(returns[returns < 0] ** 2)
+        total_sq_sum = np.sum(returns**2)
+        return neg_sq_sum / (total_sq_sum + 1e-12)
+
     def _daily(group: pd.DataFrame) -> pd.Series:
         total_vol = group["vol"].sum()
-        tail_vol = group["vol"].iloc[-6:].sum()
-        return pd.Series({
-            "trade_date": group.name,
-            "total_vol": total_vol,
-            "tail_vol": tail_vol,
-        })
+        tail_start = pd.to_datetime("14:30:00").time()
+        tail_end = pd.to_datetime("15:00:00").time()
+        tail_mask = (group["trade_time"].dt.time >= tail_start) & (
+            group["trade_time"].dt.time <= tail_end
+        )
+        tail_vol = group.loc[tail_mask, "vol"].sum()
+        returns_skewness, returns_kurtosis = compute_skew_kurtosis(group.copy())
+        price_vol_corr = compute_price_vol_corr(group)
+        downside_ratio = compute_downside_ratio(group.copy())
+
+        return pd.Series(
+            {
+                "trade_date": group.name,
+                "tail_vol": tail_vol,
+                "total_vol": total_vol,
+                "tail_ratio": tail_vol / (total_vol + 1e-12),
+                "returns_skewness": returns_skewness,
+                "returns_kurtosis": returns_kurtosis,
+                "price_vol_corr": price_vol_corr,
+                "downside_ratio": downside_ratio,
+            }
+        )
 
     daily = (
-        df
-        .groupby("trade_date")
+        df.groupby("trade_date")
         .apply(_daily)
         .reset_index(drop=True)
         .sort_values("trade_date")
     )
-    # 计算最近 T_DAYS 天的累积尾盘占比：sum(tail_vol) / sum(total_vol)
-    daily["tail_sum_T"] = daily["tail_vol"].rolling(window=T_DAYS, min_periods=1).sum()
-    daily["vol_sum_T"] = daily["total_vol"].rolling(window=T_DAYS, min_periods=1).sum()
-    daily["tail_ratio"] = daily["tail_sum_T"] / daily["vol_sum_T"]
 
     daily.insert(0, "ts_code", ts_code)
-    return daily.loc[:, ["ts_code", "trade_date", "total_vol", "tail_vol", "tail_sum_T", "vol_sum_T", "tail_ratio"]]
+    return daily[
+        [
+            "ts_code",
+            "trade_date",
+            "tail_vol",
+            "total_vol",
+            "tail_ratio",
+            "returns_skewness",
+            "returns_kurtosis",
+            "price_vol_corr",
+            "downside_ratio",
+        ]
+    ]
 
-# 3. 主函数：并行处理并合并
-if __name__ == "__main__":
-    files = list(DATA_DIR.glob("*.csv"))
+
+def main(data_dir: str, output_path: str, workers: int = 8):
+    data_dir = Path(data_dir)
+    output_path = Path(output_path)
+    files = list(data_dir.glob("*.csv"))
     results = []
-    with ProcessPoolExecutor(max_workers=8) as executor:
-        for df_daily in tqdm(executor.map(process_file, files), total=len(files), desc="Processing stocks"):
+
+    with ProcessPoolExecutor(max_workers=workers) as executor:
+        for df_daily in tqdm(
+            executor.map(process_file, files),
+            total=len(files),
+            desc="Processing stocks",
+        ):
             results.append(df_daily)
 
-    # 4. 合并并保存
     if results:
-        pd.concat(results, ignore_index=True).to_csv(OUTPUT_PATH, index=False)
-        print(f"✅ 保存至: {OUTPUT_PATH} (窗口 {T_DAYS} 天)")
+        pd.concat(results, ignore_index=True).to_csv(output_path, index=False)
+        print(f"✅ 保存至: {output_path}")
     else:
         print("⚠️ 未生成任何结果，请检查输入数据。")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="计算分钟级股票日特征")
+    parser.add_argument(
+        "--data_dir", type=str, required=True, help="输入数据目录，CSV 文件路径"
+    )
+    parser.add_argument(
+        "--output_path", type=str, required=True, help="输出 CSV 文件路径"
+    )
+    parser.add_argument("--workers", type=int, default=8, help="并行进程数量，默认 8")
+    args = parser.parse_args()
+
+    main(args.data_dir, args.output_path, args.workers)
