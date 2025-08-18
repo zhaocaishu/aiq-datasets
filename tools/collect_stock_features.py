@@ -36,6 +36,7 @@ HEADER = [
     "Total_mv",
     "Circ_mv",
     "Adj_factor",
+    "Vwap",
     "Intra_tail_ratio",
     "Intra_returns_skewness",
     "Intra_returns_kurtosis",
@@ -89,8 +90,8 @@ class ExportCodeData(object):
                     "SELECT daily.*, daily_basic.turnover_rate, daily_basic.turnover_rate_f, "
                     "daily_basic.volume_ratio, daily_basic.pe, daily_basic.pe_ttm, "
                     "daily_basic.pb, daily_basic.ps, daily_basic.ps_ttm, daily_basic.dv_ratio, "
-                    "daily_basic.dv_ttm, daily_basic.total_share, daily_basic.float_share, daily_basic.free_share, "
-                    "daily_basic.total_mv, daily_basic.circ_mv, factor.adj_factor, intraday.tail_ratio AS intra_tail_ratio, intraday.returns_skewness AS intra_returns_skewness, "
+                    "daily_basic.dv_ttm, daily_basic.total_share, daily_basic.float_share, daily_basic.free_share, daily_basic.total_mv, daily_basic.circ_mv, "
+                    "factor.adj_factor, intraday.vwap, intraday.tail_ratio AS intra_tail_ratio, intraday.returns_skewness AS intra_returns_skewness, "
                     "intraday.returns_kurtosis AS intra_returns_kurtosis, intraday.price_vol_corr AS intra_price_vol_corr, intraday.downside_ratio AS intra_downside_ratio, "
                     "stk_limit.up_limit, stk_limit.down_limit, (moneyflow.buy_lg_vol + moneyflow.buy_elg_vol), (moneyflow.sell_lg_vol + moneyflow.sell_elg_vol), "
                     "((moneyflow.buy_lg_amount + moneyflow.buy_elg_amount) - (moneyflow.sell_lg_amount + moneyflow.sell_elg_amount)) / (moneyflow.buy_lg_amount + moneyflow.buy_elg_amount + moneyflow.sell_lg_amount + moneyflow.sell_elg_amount)"

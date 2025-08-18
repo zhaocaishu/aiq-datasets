@@ -5,24 +5,23 @@ from concurrent.futures import ProcessPoolExecutor
 
 import numpy as np
 import pandas as pd
-from scipy.stats import skew, kurtosis
 
 # 常量，避免重复构造
 TAIL_START = pd.to_datetime("14:30:00").time()
 TAIL_END = pd.to_datetime("15:00:00").time()
 
 
-def compute_skew_kurtosis(returns: pd.Series):
+def compute_returns_skew(returns: pd.Series):
     if returns.empty:
-        return np.nan, np.nan
-    return skew(returns), kurtosis(returns, fisher=False)  # fisher=False → 正态=3
+        return np.nan
+    return returns.skew()
 
 
 def compute_price_vol_corr(df: pd.DataFrame):
     if df["vol"].sum() == 0:
         return np.nan
-    df["log_vol"] = np.log(df["vol"] + 1)
-    return df["close"].corr(df["log_vol"])
+    df["vol_ratio"] = df["vol"] / df["vol"].sum()
+    return df["close"].corr(df["vol_ratio"])
 
 
 def compute_downside_ratio(returns: pd.Series):
@@ -54,7 +53,7 @@ def process_file(filepath: Path) -> pd.DataFrame:
         )
         returns = group["log_return"].dropna()
 
-        returns_skewness, returns_kurtosis = compute_skew_kurtosis(returns)
+        returns_skewness = compute_returns_skew(returns)
         price_vol_corr = compute_price_vol_corr(group)
         downside_ratio = compute_downside_ratio(returns)
 
@@ -65,7 +64,6 @@ def process_file(filepath: Path) -> pd.DataFrame:
                 "total_vol": total_vol,
                 "tail_ratio": tail_vol / (total_vol + 1e-12),
                 "returns_skewness": returns_skewness,
-                "returns_kurtosis": returns_kurtosis,
                 "price_vol_corr": price_vol_corr,
                 "downside_ratio": downside_ratio,
             }
@@ -87,7 +85,6 @@ def process_file(filepath: Path) -> pd.DataFrame:
             "total_vol",
             "tail_ratio",
             "returns_skewness",
-            "returns_kurtosis",
             "price_vol_corr",
             "downside_ratio",
         ]
