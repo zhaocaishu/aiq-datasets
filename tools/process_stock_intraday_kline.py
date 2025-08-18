@@ -7,47 +7,60 @@ import numpy as np
 import pandas as pd
 from scipy.stats import skew, kurtosis
 
+# 常量，避免重复构造
+TAIL_START = pd.to_datetime("14:30:00").time()
+TAIL_END = pd.to_datetime("15:00:00").time()
+
+
+def compute_skew_kurtosis(returns: pd.Series):
+    if returns.empty:
+        return np.nan, np.nan
+    return skew(returns), kurtosis(returns, fisher=False)  # fisher=False → 正态=3
+
+
+def compute_price_vol_corr(df: pd.DataFrame):
+    if df["vol"].sum() == 0:
+        return np.nan
+    df["log_vol"] = np.log(df["vol"] + 1)
+    return df["close"].corr(df["log_vol"])
+
+
+def compute_downside_ratio(returns: pd.Series):
+    if returns.empty:
+        return np.nan
+    neg_sq_sum = np.sum(returns[returns < 0] ** 2)
+    total_sq_sum = np.sum(returns**2)
+    return neg_sq_sum / (total_sq_sum + 1e-12)
+
 
 def process_file(filepath: Path) -> pd.DataFrame:
     ts_code = filepath.stem
     df = pd.read_csv(filepath, parse_dates=["trade_time"])
     df["trade_date"] = df["trade_time"].dt.strftime("%Y%m%d")
 
-    def compute_skew_kurtosis(df):
-        df["log_return"] = (df["close"] / df["close"].shift(1)).apply(
-            lambda x: 0 if pd.isna(x) else np.log(x)
-        )
-        returns = df["log_return"].dropna()
-        return skew(returns), kurtosis(returns)
-
-    def compute_price_vol_corr(df):
-        df["log_vol"] = np.log(df["vol"] + 1)
-        return df["close"].corr(df["log_vol"])
-
-    def compute_downside_ratio(df):
-        df["log_return"] = (df["close"] / df["close"].shift(1)).apply(
-            lambda x: 0 if pd.isna(x) else np.log(x)
-        )
-        returns = df["log_return"].dropna()
-        neg_sq_sum = np.sum(returns[returns < 0] ** 2)
-        total_sq_sum = np.sum(returns**2)
-        return neg_sq_sum / (total_sq_sum + 1e-12)
-
-    def _daily(group: pd.DataFrame) -> pd.Series:
+    def _daily(group: pd.DataFrame, trade_date: str) -> pd.Series:
         total_vol = group["vol"].sum()
-        tail_start = pd.to_datetime("14:30:00").time()
-        tail_end = pd.to_datetime("15:00:00").time()
-        tail_mask = (group["trade_time"].dt.time >= tail_start) & (
-            group["trade_time"].dt.time <= tail_end
+
+        # 计算尾盘成交量
+        tail_mask = (group["trade_time"].dt.time >= TAIL_START) & (
+            group["trade_time"].dt.time <= TAIL_END
         )
         tail_vol = group.loc[tail_mask, "vol"].sum()
-        returns_skewness, returns_kurtosis = compute_skew_kurtosis(group.copy())
+
+        # 提前算 log_return，避免重复计算
+        group = group.copy()
+        group["log_return"] = (group["close"] / group["close"].shift(1)).apply(
+            lambda x: 0 if pd.isna(x) else np.log(x)
+        )
+        returns = group["log_return"].dropna()
+
+        returns_skewness, returns_kurtosis = compute_skew_kurtosis(returns)
         price_vol_corr = compute_price_vol_corr(group)
-        downside_ratio = compute_downside_ratio(group.copy())
+        downside_ratio = compute_downside_ratio(returns)
 
         return pd.Series(
             {
-                "trade_date": group.name,
+                "trade_date": trade_date,
                 "tail_vol": tail_vol,
                 "total_vol": total_vol,
                 "tail_ratio": tail_vol / (total_vol + 1e-12),
@@ -60,7 +73,7 @@ def process_file(filepath: Path) -> pd.DataFrame:
 
     daily = (
         df.groupby("trade_date")
-        .apply(_daily)
+        .apply(lambda g: _daily(g, g.name))
         .reset_index(drop=True)
         .sort_values("trade_date")
     )
@@ -89,7 +102,7 @@ def main(data_dir: str, output_path: str, workers: int = 8):
 
     with ProcessPoolExecutor(max_workers=workers) as executor:
         for df_daily in tqdm(
-            executor.map(process_file, files),
+            executor.map(process_file, files, chunksize=1),  # ✅ 防止大内存膨胀
             total=len(files),
             desc="Processing stocks",
         ):
