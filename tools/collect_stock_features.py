@@ -94,7 +94,7 @@ class ExportCodeData(object):
                     "factor.adj_factor, intraday.vwap, intraday.tail_ratio AS intra_tail_ratio, intraday.returns_skewness AS intra_returns_skewness, "
                     "intraday.returns_kurtosis AS intra_returns_kurtosis, intraday.price_vol_corr AS intra_price_vol_corr, intraday.downside_ratio AS intra_downside_ratio, "
                     "stk_limit.up_limit, stk_limit.down_limit, (moneyflow.buy_lg_vol + moneyflow.buy_elg_vol), (moneyflow.sell_lg_vol + moneyflow.sell_elg_vol), "
-                    "((moneyflow.buy_lg_amount + moneyflow.buy_elg_amount) - (moneyflow.sell_lg_amount + moneyflow.sell_elg_amount)) / (moneyflow.buy_lg_amount + moneyflow.buy_elg_amount + moneyflow.sell_lg_amount + moneyflow.sell_elg_amount)"
+                    "((moneyflow.buy_lg_amount + moneyflow.buy_elg_amount) - (moneyflow.sell_lg_amount + moneyflow.sell_elg_amount)) / (daily.amount / 10.0)"
                     "FROM ts_quotation_daily daily "
                     "JOIN ts_quotation_daily_basic daily_basic ON "
                     "daily.ts_code=daily_basic.ts_code AND "
