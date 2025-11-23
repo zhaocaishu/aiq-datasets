@@ -37,16 +37,10 @@ HEADER = [
     "Circ_mv",
     "Adj_factor",
     "Vwap",
-    "Intra_tail_ratio",
-    "Intra_returns_skewness",
-    "Intra_returns_kurtosis",
-    "Intra_price_vol_corr",
-    "Intra_downside_ratio",
     "Up_limit",
     "Down_limit",
-    "Mfd_buyord",
-    "Mfd_sellord",
-    "Mfd_volinflowrate",
+    "Mfd_inflow_vol_ratio",
+    "Mfd_large_amount_ratio",
     "Mkt_class",
     "Ind_class_l1",
     "Ind_class_l2",
@@ -87,14 +81,11 @@ class ExportCodeData(object):
             for code in stocks:
                 # 查询数据
                 query = (
-                    "SELECT daily.*, daily_basic.turnover_rate, daily_basic.turnover_rate_f, "
-                    "daily_basic.volume_ratio, daily_basic.pe, daily_basic.pe_ttm, "
-                    "daily_basic.pb, daily_basic.ps, daily_basic.ps_ttm, daily_basic.dv_ratio, "
-                    "daily_basic.dv_ttm, daily_basic.total_share, daily_basic.float_share, daily_basic.free_share, daily_basic.total_mv, daily_basic.circ_mv, "
-                    "factor.adj_factor, intraday.vwap, intraday.tail_ratio AS intra_tail_ratio, intraday.returns_skewness AS intra_returns_skewness, "
-                    "intraday.returns_kurtosis AS intra_returns_kurtosis, intraday.price_vol_corr AS intra_price_vol_corr, intraday.downside_ratio AS intra_downside_ratio, "
-                    "stk_limit.up_limit, stk_limit.down_limit, (moneyflow.buy_lg_vol + moneyflow.buy_elg_vol), (moneyflow.sell_lg_vol + moneyflow.sell_elg_vol), "
-                    "((moneyflow.buy_lg_amount + moneyflow.buy_elg_amount) - (moneyflow.sell_lg_amount + moneyflow.sell_elg_amount)) / (daily.amount / 10.0)"
+                    "SELECT daily.*, daily_basic.turnover_rate, daily_basic.turnover_rate_f, daily_basic.volume_ratio, daily_basic.pe, daily_basic.pe_ttm, "
+                    "daily_basic.pb, daily_basic.ps, daily_basic.ps_ttm, daily_basic.dv_ratio, daily_basic.dv_ttm, daily_basic.total_share, daily_basic.float_share, "
+                    "daily_basic.free_share, daily_basic.total_mv, daily_basic.circ_mv, factor.adj_factor, stk_limit.up_limit, stk_limit.down_limit, "
+                    "((moneyflow.buy_sm_vol + moneyflow.buy_md_vol + moneyflow.buy_lg_vol + moneyflow.buy_elg_vol) - (moneyflow.sell_sm_vol + moneyflow.sell_md_vol + moneyflow.sell_lg_vol + moneyflow.sell_elg_vol)) / (moneyflow.buy_sm_vol + moneyflow.buy_md_vol + moneyflow.buy_lg_vol + moneyflow.buy_elg_vol + moneyflow.sell_sm_vol + moneyflow.sell_md_vol + moneyflow.sell_lg_vol + moneyflow.sell_elg_vol), "
+                    "((moneyflow.buy_lg_amount + moneyflow.buy_elg_amount) - (moneyflow.sell_lg_amount + moneyflow.sell_elg_amount)) / (moneyflow.buy_lg_amount + moneyflow.buy_elg_amount + moneyflow.sell_lg_amount + moneyflow.sell_elg_amount)"
                     "FROM ts_quotation_daily daily "
                     "JOIN ts_quotation_daily_basic daily_basic ON "
                     "daily.ts_code=daily_basic.ts_code AND "
@@ -102,9 +93,6 @@ class ExportCodeData(object):
                     "JOIN ts_quotation_adj_factor factor ON "
                     "daily.ts_code=factor.ts_code AND "
                     "daily.trade_date=factor.trade_date "
-                    "JOIN ts_quotation_intraday_daily intraday ON "
-                    "daily.ts_code=intraday.ts_code AND "
-                    "daily.trade_date=intraday.trade_date "
                     "JOIN ts_quotation_stk_limit stk_limit ON "
                     "daily.ts_code=stk_limit.ts_code AND "
                     "daily.trade_date=stk_limit.trade_date "
