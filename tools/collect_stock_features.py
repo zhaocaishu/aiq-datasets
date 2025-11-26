@@ -36,7 +36,6 @@ HEADER = [
     "Total_mv",
     "Circ_mv",
     "Adj_factor",
-    "Vwap",
     "Up_limit",
     "Down_limit",
     "Mfd_inflow_vol_ratio",
