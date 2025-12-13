@@ -47,7 +47,16 @@ class ExportCodeData(object):
             os.makedirs(save_dir)
 
         # 上市的全部指数代码
-        codes = ["000903.SH", "000300.SH", "000905.SH", "000906.SH", "000852.SH", "000985.SH"]
+        codes = [
+            "000903.SH",
+            "000300.SH",
+            "000905.SH",
+            "000906.SH",
+            "000852.SH",
+            "000985.SH",
+            "399370.SZ",
+            "399371.SZ",
+        ]
 
         # 从数据库导出数据
         for code in codes:
@@ -59,9 +68,9 @@ class ExportCodeData(object):
                 query = (
                     "SELECT * FROM ts_idx_index_daily WHERE index_code = '%s'" % code
                 )
-    
+
                 print(query)
-    
+
                 cursor.execute(query)
 
                 with open("%s/%s.csv" % (save_dir, code), "w", newline="") as csvfile:
@@ -69,7 +78,7 @@ class ExportCodeData(object):
                         csvfile, delimiter=",", quotechar="|", quoting=csv.QUOTE_MINIMAL
                     )
                     writer.writerow(HEADER)
-    
+
                     for row in cursor:
                         list_row = list(row)
                         t_date = list_row[1]
