@@ -44,14 +44,14 @@ class DataQualityChecker:
         if not os.path.exists(self.calendar_path):
             raise FileNotFoundError(f"交易日历不存在: {self.calendar_path}")
 
-        df = pd.read_csv(self.calendar_path, dtype={"Trade_date": str})
+        df = pd.read_csv(self.calendar_path, dtype={"Date": str})
         df = df[df["Exchange"] == self.exchange]
         return df
 
     def get_trading_days(self, start_date: str, end_date: str) -> Set[str]:
         df = self.calendar_df
-        df = df[(df["Trade_date"] >= start_date) & (df["Trade_date"] <= end_date)]
-        return set(df["Trade_date"].tolist())
+        df = df[(df["Date"] >= start_date) & (df["Date"] <= end_date)]
+        return set(df["Date"].tolist())
 
     def _load_suspend_data(self) -> pd.DataFrame:
         if not os.path.exists(self.suspend_path):
