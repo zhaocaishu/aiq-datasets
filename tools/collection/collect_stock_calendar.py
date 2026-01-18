@@ -66,16 +66,16 @@ if __name__ == "__main__":
     """主程序，解析参数，并执行相关的命令"""
     parser = argparse.ArgumentParser(description="获取全部交易日期")
     parser.add_argument(
-        "-save_dir", required=True, type=str, help="Directory of the files"
+        "--save_dir", required=True, type=str, help="Directory of the files"
     )
     parser.add_argument(
-        "-host", type=str, default="127.0.0.1", help="The address of database"
+        "--host", type=str, default="127.0.0.1", help="The address of database"
     )
     parser.add_argument(
-        "-user", type=str, default="zcs", help="The user name of database"
+        "--user", type=str, default="zcs", help="The user name of database"
     )
     parser.add_argument(
-        "-passwd", type=str, default="2025zcsdaydayup", help="The password of database"
+        "--passwd", type=str, default="2025zcsdaydayup", help="The password of database"
     )
 
     args = parser.parse_args()

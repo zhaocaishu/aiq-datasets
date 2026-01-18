@@ -166,7 +166,8 @@ def main():
         print(
             f"{r['ts_code']} | "
             f"missing_ratio={r['missing_ratio']:.4f} | "
-            f"missing_cnt={r['missing_cnt']}"
+            f"missing_cnt={r['missing_cnt']} | "
+            f"missing_days={r['missing_days'][:10]}"
         )
 
 
