@@ -122,7 +122,7 @@ class DataQualityChecker:
         stocks_with_missing = sum(r["missing_cnt"] > 0 for r in results)
 
         total_missing_days = sum(r["missing_cnt"] for r in results)
-        total_effective_days = sum(r["effective_trading_days"] for r in results)
+        total_trading_days = sum(r["trading_days"] for r in results)
 
         return {
             "total_stocks": total_stocks,
@@ -130,8 +130,8 @@ class DataQualityChecker:
                 stocks_with_missing / total_stocks if total_stocks else 0.0
             ),
             "missing_day_ratio": (
-                total_missing_days / total_effective_days
-                if total_effective_days
+                total_missing_days / total_trading_days
+                if total_trading_days
                 else 0.0
             ),
         }
