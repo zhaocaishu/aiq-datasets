@@ -2,7 +2,6 @@
 import os
 import argparse
 import csv
-import pandas as pd
 
 import mysql.connector
 

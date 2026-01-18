@@ -2,7 +2,7 @@ import argparse
 import pandas as pd
 from sqlalchemy import create_engine
 
-from helpers.db_constants import (
+from common.constants import (
     QUOTATION_VWAP_COLUMN_MAP,
     QUOTATION_VWAP_TABLE_NAME,
 )
