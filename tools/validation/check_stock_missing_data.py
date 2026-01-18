@@ -29,6 +29,8 @@ class DataQualityChecker:
         calendar_file: str = "calendars/day.csv",
         suspend_file: str = "suspend/suspend.csv",
         feature_dir: str = "features",
+        start_date: str | None = None,
+        end_date: str | None = None,
     ):
         self.data_dir = data_dir
         self.exchange = exchange
@@ -36,6 +38,10 @@ class DataQualityChecker:
         self.calendar_path = os.path.join(data_dir, calendar_file)
         self.suspend_path = os.path.join(data_dir, suspend_file)
         self.feature_dir = os.path.join(data_dir, feature_dir)
+
+        # 校验区间（全局）
+        self.start_date = start_date
+        self.end_date = end_date
 
         self.calendar_df = self._load_trading_calendar()
         self.suspend_df = self._load_suspend_data()
@@ -68,13 +74,11 @@ class DataQualityChecker:
         df = df[df["ts_code"] == ts_code]
         df = df[(df["trade_date"] >= start_date) & (df["trade_date"] <= end_date)]
 
-        trade_dates = (
-            pd.to_datetime(df["trade_date"], format="%Y%m%d")
-            .dt.strftime("%Y-%m-%d")
+        trade_dates = pd.to_datetime(df["trade_date"], format="%Y%m%d").dt.strftime(
+            "%Y-%m-%d"
         )
 
         return set(trade_dates.tolist())
-
 
     def check_single_stock(self, stock_file: str) -> Dict:
         df = pd.read_csv(stock_file, dtype={"Date": str})
@@ -84,16 +88,34 @@ class DataQualityChecker:
             raise ValueError(f"{ts_code} 数据中缺少 Date 字段")
 
         data_dates = set(df["Date"].tolist())
-        start_date = df["Date"].min()
-        end_date = df["Date"].max()
+
+        data_start = df["Date"].min()
+        data_end = df["Date"].max()
+
+        # 实际校验区间（取交集）
+        start_date = max(data_start, self.start_date) if self.start_date else data_start
+        end_date = min(data_end, self.end_date) if self.end_date else data_end
+
+        if start_date > end_date:
+            return {
+                "ts_code": ts_code,
+                "start_date": start_date,
+                "end_date": end_date,
+                "trading_days": 0,
+                "suspend_days": 0,
+                "data_days": 0,
+                "missing_cnt": 0,
+                "missing_ratio": 0.0,
+                "missing_days": [],
+            }
 
         trading_days = self.get_trading_days(start_date, end_date)
         suspend_days = self.get_suspend_days(ts_code, start_date, end_date)
 
-        # 数据可覆盖的日期（有数据 or 停牌）
-        covered_days = data_dates | suspend_days
+        # 仅保留区间内的数据日期
+        data_dates = {d for d in data_dates if start_date <= d <= end_date}
 
-        # 真实缺失
+        covered_days = data_dates | suspend_days
         missing_days = trading_days - covered_days
 
         return {
@@ -137,9 +159,7 @@ class DataQualityChecker:
                 stocks_with_missing / total_stocks if total_stocks else 0.0
             ),
             "missing_day_ratio": (
-                total_missing_days / total_trading_days
-                if total_trading_days
-                else 0.0
+                total_missing_days / total_trading_days if total_trading_days else 0.0
             ),
         }
 
@@ -149,10 +169,18 @@ def main():
         description="A股个股数据质量校验（交易日 + 停复牌）"
     )
     parser.add_argument("--data_dir", required=True, type=str, help="数据根目录")
+    parser.add_argument(
+        "--start_date", type=str, default=None, help="开始日期（YYYY-MM-DD）"
+    )
+    parser.add_argument(
+        "--end_date", type=str, default=None, help="结束日期（YYYY-MM-DD）"
+    )
     parser.add_argument("--topk", default=10, type=int, help="输出缺失率最高的股票数量")
     args = parser.parse_args()
 
-    checker = DataQualityChecker(data_dir=args.data_dir)
+    checker = DataQualityChecker(
+        data_dir=args.data_dir, start_date=args.start_date, end_date=args.end_date
+    )
 
     results = checker.check_all_stocks()
     summary = checker.summary(results)
