@@ -29,8 +29,8 @@ class DataQualityChecker:
         calendar_file: str = "calendars/day.csv",
         suspend_file: str = "suspend/suspend.csv",
         feature_dir: str = "features",
-        start_date: str | None = None,
-        end_date: str | None = None,
+        start_date: str = None,
+        end_date: str = None,
     ):
         self.data_dir = data_dir
         self.exchange = exchange
