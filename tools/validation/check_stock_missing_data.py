@@ -83,11 +83,11 @@ class DataQualityChecker:
         trading_days = self.get_trading_days(start_date, end_date)
         suspend_days = self.get_suspend_days(ts_code, start_date, end_date)
 
-        # 有效交易日 = 交易日 - 停牌日
-        effective_trading_days = trading_days - suspend_days
+        # 数据可覆盖的日期（有数据 or 停牌）
+        covered_days = data_dates | suspend_days
 
         # 真实缺失
-        missing_days = effective_trading_days - data_dates
+        missing_days = trading_days - covered_days
 
         return {
             "ts_code": ts_code,
@@ -95,13 +95,10 @@ class DataQualityChecker:
             "end_date": end_date,
             "trading_days": len(trading_days),
             "suspend_days": len(suspend_days),
-            "effective_trading_days": len(effective_trading_days),
             "data_days": len(data_dates),
             "missing_cnt": len(missing_days),
             "missing_ratio": (
-                len(missing_days) / len(effective_trading_days)
-                if effective_trading_days
-                else 0.0
+                len(missing_days) / len(trading_days) if trading_days else 0.0
             ),
             "missing_days": sorted(missing_days),
         }
