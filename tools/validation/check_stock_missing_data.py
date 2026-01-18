@@ -67,7 +67,14 @@ class DataQualityChecker:
         df = self.suspend_df
         df = df[df["ts_code"] == ts_code]
         df = df[(df["trade_date"] >= start_date) & (df["trade_date"] <= end_date)]
-        return set(df["trade_date"].tolist())
+
+        trade_dates = (
+            pd.to_datetime(df["trade_date"], format="%Y%m%d")
+            .dt.strftime("%Y-%m-%d")
+        )
+
+        return set(trade_dates.tolist())
+
 
     def check_single_stock(self, stock_file: str) -> Dict:
         df = pd.read_csv(stock_file, dtype={"Date": str})
