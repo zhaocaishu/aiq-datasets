@@ -27,12 +27,7 @@ def fetch_listed_stocks(connection) -> Dict[str, Tuple[str, str, str]]:
                TRIM(REPLACE(industry.l2_name, 'Ⅱ', '')) AS l2_name,
                DATE_FORMAT(basic.list_date, '%Y-%m-%d') AS list_date
         FROM ts_basic_stock_list basic
-        JOIN (
-            SELECT ts_code,
-                   l1_name,
-                   l2_name
-            FROM ts_idx_industry_cons
-        ) industry
+        JOIN ts_idx_industry_cons industry
         ON basic.ts_code = industry.ts_code
         WHERE basic.market IN ('主板', '创业板', '科创板')
         AND basic.list_status = 'L'
