@@ -3,7 +3,7 @@ from typing import Dict, Tuple
 
 def fetch_listed_stocks(connection) -> Dict[str, Tuple[str, str, str]]:
     """
-    筛选当前状态为“正常上市”的A股股票（覆盖主板、创业板、科创板），并提取其股票代码、所属板块、一级行业、二级行业及上市日期等信息。
+    筛选当前状态为“正常上市”的A股股票（覆盖主板、创业板、科创板），并提取其股票代码、板块、一级行业、二级行业及上市日期等信息。
 
     Args:
         connection: 数据库连接对象
@@ -26,7 +26,7 @@ def fetch_listed_stocks(connection) -> Dict[str, Tuple[str, str, str]]:
                TRIM(industry.l1_name) AS l1_name,
                TRIM(REPLACE(industry.l2_name, 'Ⅱ', '')) AS l2_name,
                DATE_FORMAT(basic.list_date, '%Y-%m-%d') AS list_date
-        FROM ts_basic_stock_metadata basic
+        FROM ts_basic_stock_list basic
         JOIN (
             SELECT ts_code,
                    l1_name,
@@ -44,8 +44,7 @@ def fetch_listed_stocks(connection) -> Dict[str, Tuple[str, str, str]]:
         # stocks will map ts_code → (market, industry_l1, industry_l2, list_date)
         stocks = {
             ts_code: (market, industry_l1, industry_l2, list_date)
-            for ts_code, market, industry_l1, industry_l2, list_date
-            in cursor
+            for ts_code, market, industry_l1, industry_l2, list_date in cursor
         }
 
     print(f"合计 {len(stocks)} 个上市股票代码")
