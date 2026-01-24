@@ -155,6 +155,7 @@ class ExportCodeData(object):
                     FROM ts_quotation_daily d
                     JOIN ts_financial_fina_indicator f 
                         ON d.ts_code = f.ts_code 
+                    WHERE d.ts_code = '{code}'
                         AND f.update_flag = 1 
                         AND f.ann_date <= d.trade_date
                 ) fina 
