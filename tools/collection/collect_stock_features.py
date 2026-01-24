@@ -80,45 +80,89 @@ class ExportCodeData(object):
         with self.connection.cursor() as cursor:
             for code in stocks:
                 # 查询数据
-                query = (
-                    "SELECT daily.*, daily_basic.turnover_rate, daily_basic.turnover_rate_f, daily_basic.volume_ratio, daily_basic.pe, daily_basic.pe_ttm, "
-                    "daily_basic.pb, daily_basic.ps, daily_basic.ps_ttm, daily_basic.dv_ratio, daily_basic.dv_ttm, daily_basic.total_share, daily_basic.float_share, "
-                    "daily_basic.free_share, daily_basic.total_mv, daily_basic.circ_mv, factor.adj_factor, stk_limit.up_limit, stk_limit.down_limit, "
-                    "((moneyflow.buy_sm_vol + moneyflow.buy_md_vol + moneyflow.buy_lg_vol + moneyflow.buy_elg_vol) - (moneyflow.sell_sm_vol + moneyflow.sell_md_vol + moneyflow.sell_lg_vol + moneyflow.sell_elg_vol)) / (moneyflow.buy_sm_vol + moneyflow.buy_md_vol + moneyflow.buy_lg_vol + moneyflow.buy_elg_vol + moneyflow.sell_sm_vol + moneyflow.sell_md_vol + moneyflow.sell_lg_vol + moneyflow.sell_elg_vol), "
-                    "((moneyflow.buy_lg_amount + moneyflow.buy_elg_amount) - (moneyflow.sell_lg_amount + moneyflow.sell_elg_amount)) / (moneyflow.buy_lg_amount + moneyflow.buy_elg_amount + moneyflow.sell_lg_amount + moneyflow.sell_elg_amount), "
-                    "fina.q_dt_roe "
-                    "FROM ts_quotation_daily daily "
-                    "JOIN ts_quotation_daily_basic daily_basic ON "
-                    "daily.ts_code=daily_basic.ts_code AND "
-                    "daily.trade_date=daily_basic.trade_date "
-                    "JOIN ts_quotation_adj_factor factor ON "
-                    "daily.ts_code=factor.ts_code AND "
-                    "daily.trade_date=factor.trade_date "
-                    "JOIN ts_quotation_stk_limit stk_limit ON "
-                    "daily.ts_code=stk_limit.ts_code AND "
-                    "daily.trade_date=stk_limit.trade_date "
-                    "JOIN ts_quotation_moneyflow moneyflow ON "
-                    "daily.ts_code=moneyflow.ts_code AND "
-                    "daily.trade_date=moneyflow.trade_date "
-                    "JOIN ts_financial_fina_indicator fina ON "
-                    "daily.ts_code = fina.ts_code "
-                    "AND fina.update_flag = 1 "
-                    "AND fina.ann_date = ( "
-                    "    SELECT MAX(f2.ann_date) "
-                    "    FROM ts_financial_fina_indicator f2 "
-                    "    WHERE f2.ts_code = daily.ts_code "
-                    "    AND f2.update_flag = 1 "
-                    "    AND f2.ann_date <= daily.trade_date "
-                    ") "
-                    "AND fina.end_date = ( "
-                    "    SELECT MAX(f3.end_date) "
-                    "    FROM ts_financial_fina_indicator f3 "
-                    "    WHERE f3.ts_code = daily.ts_code "
-                    "    AND f3.ann_date = fina.ann_date "
-                    "    AND f3.update_flag = 1 "
-                    ") "
-                    "WHERE daily.ts_code='%s' LIMIT 50000" % code
-                )
+                query = f"""
+                SELECT 
+                    -- 基础行情数据
+                    daily.*, 
+                    daily_basic.turnover_rate, 
+                    daily_basic.turnover_rate_f, 
+                    daily_basic.volume_ratio, 
+                    daily_basic.pe, 
+                    daily_basic.pe_ttm, 
+                    daily_basic.pb, 
+                    daily_basic.ps, 
+                    daily_basic.ps_ttm, 
+                    daily_basic.dv_ratio, 
+                    daily_basic.dv_ttm, 
+                    daily_basic.total_share, 
+                    daily_basic.float_share, 
+                    daily_basic.free_share, 
+                    daily_basic.total_mv, 
+                    daily_basic.circ_mv, 
+                    
+                    -- 因子与涨跌停
+                    factor.adj_factor, 
+                    stk_limit.up_limit, 
+                    stk_limit.down_limit, 
+                    
+                    -- 资金流向计算：净流入成交量占比
+                    ((moneyflow.buy_sm_vol + moneyflow.buy_md_vol + moneyflow.buy_lg_vol + moneyflow.buy_elg_vol) - 
+                    (moneyflow.sell_sm_vol + moneyflow.sell_md_vol + moneyflow.sell_lg_vol + moneyflow.sell_elg_vol)) / 
+                    NULLIF(
+                        (moneyflow.buy_sm_vol + moneyflow.buy_md_vol + moneyflow.buy_lg_vol + moneyflow.buy_elg_vol + 
+                        moneyflow.sell_sm_vol + moneyflow.sell_md_vol + moneyflow.sell_lg_vol + moneyflow.sell_elg_vol), 
+                        0
+                    ) AS mfd_inflow_vol_ratio, 
+                    
+                    -- 资金流向计算：大单净流入金额占比
+                    ((moneyflow.buy_lg_amount + moneyflow.buy_elg_amount) - 
+                    (moneyflow.sell_lg_amount + moneyflow.sell_elg_amount)) / 
+                    NULLIF(
+                        (moneyflow.buy_lg_amount + moneyflow.buy_elg_amount + 
+                        moneyflow.sell_lg_amount + moneyflow.sell_elg_amount), 
+                        0
+                    ) AS mfd_large_amount_ratio, 
+                    
+                    -- 财务指标
+                    fina.q_dt_roe 
+
+                FROM ts_quotation_daily daily
+                JOIN ts_quotation_daily_basic daily_basic 
+                    ON daily.ts_code = daily_basic.ts_code 
+                    AND daily.trade_date = daily_basic.trade_date
+                JOIN ts_quotation_adj_factor factor 
+                    ON daily.ts_code = factor.ts_code 
+                    AND daily.trade_date = factor.trade_date
+                JOIN ts_quotation_stk_limit stk_limit 
+                    ON daily.ts_code = stk_limit.ts_code 
+                    AND daily.trade_date = stk_limit.trade_date
+                JOIN ts_quotation_moneyflow moneyflow 
+                    ON daily.ts_code = moneyflow.ts_code 
+                    AND daily.trade_date = moneyflow.trade_date
+
+                -- 关联财务指标：通过子查询筛选每个交易日前最新的财务数据
+                JOIN (
+                    SELECT 
+                        d.ts_code, 
+                        d.trade_date, 
+                        f.q_dt_roe, 
+                        ROW_NUMBER() OVER (
+                            PARTITION BY d.ts_code, d.trade_date 
+                            ORDER BY f.ann_date DESC, f.end_date DESC
+                        ) AS rn 
+                    FROM ts_quotation_daily d
+                    JOIN ts_financial_fina_indicator f 
+                        ON d.ts_code = f.ts_code 
+                        AND f.update_flag = 1 
+                        AND f.ann_date <= d.trade_date
+                ) fina 
+                    ON fina.ts_code = daily.ts_code 
+                    AND fina.trade_date = daily.trade_date 
+                    AND fina.rn = 1 
+
+                WHERE daily.ts_code = '{code}' 
+                LIMIT 50000
+                """
 
                 print(query)
 
