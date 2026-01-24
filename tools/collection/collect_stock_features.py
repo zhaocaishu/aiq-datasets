@@ -40,11 +40,11 @@ HEADER = [
     "Down_limit",
     "Mfd_inflow_vol_ratio",
     "Mfd_large_amount_ratio",
+    "Q_dt_roe",
     "Mkt_class",
     "Ind_class_l1",
     "Ind_class_l2",
     "List_date",
-    "Q_dt_roe",
 ]
 
 
