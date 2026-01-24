@@ -44,6 +44,7 @@ HEADER = [
     "Ind_class_l1",
     "Ind_class_l2",
     "List_date",
+    "Q_dt_roe",
 ]
 
 
@@ -84,7 +85,8 @@ class ExportCodeData(object):
                     "daily_basic.pb, daily_basic.ps, daily_basic.ps_ttm, daily_basic.dv_ratio, daily_basic.dv_ttm, daily_basic.total_share, daily_basic.float_share, "
                     "daily_basic.free_share, daily_basic.total_mv, daily_basic.circ_mv, factor.adj_factor, stk_limit.up_limit, stk_limit.down_limit, "
                     "((moneyflow.buy_sm_vol + moneyflow.buy_md_vol + moneyflow.buy_lg_vol + moneyflow.buy_elg_vol) - (moneyflow.sell_sm_vol + moneyflow.sell_md_vol + moneyflow.sell_lg_vol + moneyflow.sell_elg_vol)) / (moneyflow.buy_sm_vol + moneyflow.buy_md_vol + moneyflow.buy_lg_vol + moneyflow.buy_elg_vol + moneyflow.sell_sm_vol + moneyflow.sell_md_vol + moneyflow.sell_lg_vol + moneyflow.sell_elg_vol), "
-                    "((moneyflow.buy_lg_amount + moneyflow.buy_elg_amount) - (moneyflow.sell_lg_amount + moneyflow.sell_elg_amount)) / (moneyflow.buy_lg_amount + moneyflow.buy_elg_amount + moneyflow.sell_lg_amount + moneyflow.sell_elg_amount)"
+                    "((moneyflow.buy_lg_amount + moneyflow.buy_elg_amount) - (moneyflow.sell_lg_amount + moneyflow.sell_elg_amount)) / (moneyflow.buy_lg_amount + moneyflow.buy_elg_amount + moneyflow.sell_lg_amount + moneyflow.sell_elg_amount), "
+                    "fina.q_dt_roe "
                     "FROM ts_quotation_daily daily "
                     "JOIN ts_quotation_daily_basic daily_basic ON "
                     "daily.ts_code=daily_basic.ts_code AND "
@@ -98,6 +100,16 @@ class ExportCodeData(object):
                     "JOIN ts_quotation_moneyflow moneyflow ON "
                     "daily.ts_code=moneyflow.ts_code AND "
                     "daily.trade_date=moneyflow.trade_date "
+                    "JOIN ts_financial_fina_indicator fina ON "
+                    "daily.ts_code = fina.ts_code "
+                    "AND fina.update_flag = 1 "
+                    "AND fina.ann_date = ( "
+                    "    SELECT MAX(f2.ann_date) "
+                    "    FROM ts_financial_fina_indicator f2 "
+                    "    WHERE f2.ts_code = daily.ts_code "
+                    "    AND f2.update_flag = 1 "
+                    "    AND f2.ann_date <= daily.trade_date "
+                    ") "
                     "WHERE daily.ts_code='%s' LIMIT 50000" % code
                 )
 
