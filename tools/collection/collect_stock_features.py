@@ -110,6 +110,13 @@ class ExportCodeData(object):
                     "    AND f2.update_flag = 1 "
                     "    AND f2.ann_date <= daily.trade_date "
                     ") "
+                    "AND fina.end_date = ( "
+                    "    SELECT MAX(f3.end_date) "
+                    "    FROM ts_financial_fina_indicator f3 "
+                    "    WHERE f3.ts_code = daily.ts_code "
+                    "    AND f3.ann_date = fina.ann_date "
+                    "    AND f3.update_flag = 1 "
+                    ") "
                     "WHERE daily.ts_code='%s' LIMIT 50000" % code
                 )
 
