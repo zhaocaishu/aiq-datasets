@@ -100,8 +100,10 @@ class ExportCodeData(object):
                     daily_basic.total_mv, 
                     daily_basic.circ_mv, 
                     
-                    -- 因子与涨跌停
+                    -- 复权因子
                     factor.adj_factor, 
+
+                    -- 涨跌停
                     stk_limit.up_limit, 
                     stk_limit.down_limit, 
                     
