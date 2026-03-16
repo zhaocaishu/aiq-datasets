@@ -98,6 +98,13 @@ if __name__ == "__main__":
         "--save_dir", required=True, type=str, help="Directory of the saved files"
     )
     parser.add_argument(
+        "--freq",
+        type=str,
+        default="daily",
+        choices=["daily", "5min"],
+        help="Data frequency, default is daily",
+    )
+    parser.add_argument(
         "--host", type=str, default="127.0.0.1", help="The address of database"
     )
     parser.add_argument(
@@ -109,12 +116,14 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # 解析命令行中的参数，得到需要爬取的数据、日期范围
-    print("Begin export data, save directory: %s" % args.save_dir)
+    # 解析命令行中的参数，显示数据保存目录和频率
+    print(
+        "Begin export data, save directory: %s, freq: %s" % (args.save_dir, args.freq)
+    )
 
     export = ExportCodeData(args)
     try:
-        export.export_data(os.path.join(args.save_dir, "features"))
+        export.export_data(os.path.join(args.save_dir, "features", args.freq))
     finally:
         export.close()  # 确保连接被关闭
 

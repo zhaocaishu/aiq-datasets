@@ -94,7 +94,7 @@ if __name__ == "__main__":
 
     export = ExportCodeData(args)
     try:
-        export.export_data(os.path.join(args.save_dir, "instruments"), args.index_name)
+        export.export_data(os.path.join(args.save_dir, "universes"), args.index_name)
     finally:
         export.close()  # 确保连接被关闭
 
