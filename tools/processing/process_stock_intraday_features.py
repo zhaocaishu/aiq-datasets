@@ -22,10 +22,11 @@ def process_file(filepath: Path, daily_dir: Path, dst_dir: Path):
         # 读取数据
         df_min = pd.read_csv(filepath)
         df_day = pd.read_csv(daily_file, usecols=["Date", "Adj_factor"])
+        df_day["TradeDate"] = df_day["Date"].dt.date
 
         # 时间处理（保持 datetime64）
-        df_min["Date"] = pd.to_datetime(df_min["trade_time"]).dt.normalize()
-        df_day["Date"] = pd.to_datetime(df_day["Date"]).dt.normalize()
+        df_min["Date"] = pd.to_datetime(df_min["trade_time"])   # 保留时间
+        df_min["TradeDate"] = df_min["Date"].dt.date
 
         # 重命名
         df_min.rename(
@@ -41,8 +42,8 @@ def process_file(filepath: Path, daily_dir: Path, dst_dir: Path):
         )
 
         # merge优化：用map代替merge
-        adj_map = df_day.set_index("Date")["Adj_factor"]
-        df_min["Adj_factor"] = df_min["Date"].map(adj_map)
+        adj_map = df_day.set_index("TradeDate")["Adj_factor"]
+        df_min["Adj_factor"] = df_min["TradeDate"].map(adj_map)
 
         # 插入Instrument
         df_min.insert(0, "Instrument", instrument_id)
