@@ -2,125 +2,146 @@ import argparse
 from pathlib import Path
 from tqdm import tqdm
 from concurrent.futures import ProcessPoolExecutor
-
-import numpy as np
+from functools import partial
 import pandas as pd
 
-# 常量，避免重复构造
-TAIL_START = pd.to_datetime("14:30:00").time()
-TAIL_END = pd.to_datetime("15:00:00").time()
 
+def process_file(filepath: Path, daily_dir: Path, dst_dir: Path):
+    """
+    处理单个CSV文件（5min数据）：
+      - 若日线缺失 -> SKIP
+      - 否则标准化 + 合并复权因子 + 输出到 dst_dir
+    """
+    try:
+        instrument_id = filepath.stem
+        daily_file = daily_dir / f"{instrument_id}.csv"
 
-def compute_returns_skew(returns: pd.Series):
-    if returns.empty:
-        return np.nan
-    return returns.skew()
+        if not daily_file.exists():
+            return "SKIP"
 
+        # 读取数据
+        df_min = pd.read_csv(filepath)
+        df_day = pd.read_csv(daily_file, usecols=["Date", "Adj_factor"])
 
-def compute_price_vol_corr(df: pd.DataFrame):
-    if df["vol"].sum() == 0:
-        return np.nan
-    df["vol_ratio"] = df["vol"] / df["vol"].sum()
-    return df["close"].corr(df["vol_ratio"])
+        # 时间处理（保持 datetime64）
+        df_min["Date"] = pd.to_datetime(df_min["trade_time"]).dt.normalize()
+        df_day["Date"] = pd.to_datetime(df_day["Date"]).dt.normalize()
 
-
-def compute_downside_ratio(returns: pd.Series):
-    if returns.empty:
-        return np.nan
-    neg_sq_sum = np.sum(returns[returns < 0] ** 2)
-    total_sq_sum = np.sum(returns**2)
-    return neg_sq_sum / (total_sq_sum + 1e-12)
-
-
-def process_file(filepath: Path) -> pd.DataFrame:
-    ts_code = filepath.stem
-    df = pd.read_csv(filepath, parse_dates=["trade_time"])
-    df["trade_date"] = df["trade_time"].dt.strftime("%Y%m%d")
-
-    def _daily(group: pd.DataFrame, trade_date: str) -> pd.Series:
-        total_vol = group["vol"].sum()
-
-        # 计算尾盘成交量
-        tail_mask = (group["trade_time"].dt.time >= TAIL_START) & (
-            group["trade_time"].dt.time <= TAIL_END
-        )
-        tail_vol = group.loc[tail_mask, "vol"].sum()
-
-        # 提前算 log_return，避免重复计算
-        group = group.copy()
-        group["log_return"] = (group["close"] / group["close"].shift(1)).apply(
-            lambda x: 0 if pd.isna(x) else np.log(x)
-        )
-        returns = group["log_return"].dropna()
-
-        returns_skewness = compute_returns_skew(returns)
-        price_vol_corr = compute_price_vol_corr(group)
-        downside_ratio = compute_downside_ratio(returns)
-
-        return pd.Series(
-            {
-                "trade_date": trade_date,
-                "tail_vol": tail_vol,
-                "total_vol": total_vol,
-                "tail_ratio": tail_vol / (total_vol + 1e-12),
-                "returns_skewness": returns_skewness,
-                "price_vol_corr": price_vol_corr,
-                "downside_ratio": downside_ratio,
-            }
+        # 重命名
+        df_min.rename(
+            columns={
+                "open": "Open",
+                "high": "High",
+                "low": "Low",
+                "close": "Close",
+                "vol": "Volume",
+                "amount": "Amount",
+            },
+            inplace=True,
         )
 
-    daily = (
-        df.groupby("trade_date")
-        .apply(lambda g: _daily(g, g.name))
-        .reset_index(drop=True)
-        .sort_values("trade_date")
+        # merge优化：用map代替merge
+        adj_map = df_day.set_index("Date")["Adj_factor"]
+        df_min["Adj_factor"] = df_min["Date"].map(adj_map)
+
+        # 插入Instrument
+        df_min.insert(0, "Instrument", instrument_id)
+
+        # 列排序
+        df_min = df_min[
+            [
+                "Instrument",
+                "Date",
+                "Adj_factor",
+                "Open",
+                "Close",
+                "High",
+                "Low",
+                "Volume",
+                "Amount",
+            ]
+        ]
+
+        # 输出路径
+        out_path = dst_dir / filepath.name
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+
+        df_min.to_csv(out_path, index=False)
+
+        return True
+
+    except Exception as e:
+        return f"{filepath.name}: {e}"
+
+
+def main(minute_dir: str, daily_dir: str, dst_dir: str, workers: int = 8):
+    minute_dir = Path(minute_dir)
+    daily_dir = Path(daily_dir)
+    dst_dir = Path(dst_dir)
+
+    if not minute_dir.exists():
+        print(f"❌ 分钟目录不存在: {minute_dir}")
+        return
+
+    if not daily_dir.exists():
+        print(f"❌ 日线目录不存在: {daily_dir}")
+        return
+
+    files = list(minute_dir.glob("*.csv"))
+
+    if not files:
+        print(f"❌ 没有找到CSV文件: {minute_dir}")
+        return
+
+    print(f"🚀 处理 {len(files)} 个文件 | workers={workers}")
+
+    process_func = partial(
+        process_file,
+        daily_dir=daily_dir,
+        dst_dir=dst_dir,
     )
 
-    daily.insert(0, "ts_code", ts_code)
-    return daily[
-        [
-            "ts_code",
-            "trade_date",
-            "tail_vol",
-            "total_vol",
-            "tail_ratio",
-            "returns_skewness",
-            "price_vol_corr",
-            "downside_ratio",
-        ]
-    ]
-
-
-def main(data_dir: str, output_path: str, workers: int = 8):
-    data_dir = Path(data_dir)
-    output_path = Path(output_path)
-    files = list(data_dir.glob("*.csv"))
-    results = []
+    success, skipped, errors = 0, 0, []
 
     with ProcessPoolExecutor(max_workers=workers) as executor:
-        for df_daily in tqdm(
-            executor.map(process_file, files, chunksize=1),  # ✅ 防止大内存膨胀
+        for res in tqdm(
+            executor.map(process_func, files, chunksize=20),
             total=len(files),
-            desc="Processing stocks",
+            desc="Processing",
         ):
-            results.append(df_daily)
+            if res is True:
+                success += 1
+            elif res == "SKIP":
+                skipped += 1
+            else:
+                errors.append(res)
 
-    if results:
-        pd.concat(results, ignore_index=True).to_csv(output_path, index=False)
-        print(f"✅ 保存至: {output_path}")
-    else:
-        print("⚠️ 未生成任何结果，请检查输入数据。")
+    print("\n📊 统计结果:")
+    print(f"  ✅ 成功: {success}")
+    print(f"  ⏭️ 跳过: {skipped}")
+    print(f"  ❌ 失败: {len(errors)}")
+
+    if errors:
+        print("\n⚠️ 错误详情:")
+        for e in errors[:20]:  # 避免刷屏
+            print("  ", e)
+
+    print("\n✅ 完成")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="计算分钟级股票日特征")
-    parser.add_argument(
-        "--data_dir", type=str, required=True, help="输入数据目录，CSV 文件路径"
-    )
-    parser.add_argument(
-        "--output_path", type=str, required=True, help="输出 CSV 文件路径"
-    )
-    parser.add_argument("--workers", type=int, default=8, help="并行进程数量，默认 8")
+    parser = argparse.ArgumentParser(description="分钟数据补充复权因子")
+
+    parser.add_argument("--src_minute_dir", required=True)
+    parser.add_argument("--src_daily_dir", required=True)
+    parser.add_argument("--dst_dir", required=True)
+    parser.add_argument("--workers", type=int, default=8)
+
     args = parser.parse_args()
 
-    main(args.data_dir, args.output_path, args.workers)
+    main(
+        minute_dir=args.src_minute_dir,
+        daily_dir=args.src_daily_dir,
+        dst_dir=args.dst_dir,
+        workers=args.workers,
+    )
