@@ -26,7 +26,7 @@ def process_file(filepath: Path, daily_dir: Path, dst_dir: Path):
 
         # 时间处理（保持 datetime64）
         df_min["Trade_time"] = pd.to_datetime(df_min["trade_time"])   # 保留时间
-        df_min["TradeDate"] = df_min["Date"].dt.floor("D")
+        df_min["TradeDate"] = df_min["Trade_time"].dt.floor("D")
 
         # 重命名
         df_min.rename(
