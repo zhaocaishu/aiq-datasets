@@ -36,7 +36,7 @@ def process_file(filepath: Path, daily_dir: Path, dst_dir: Path):
                 "low": "Low",
                 "close": "Close",
                 "vol": "Volume",
-                "amount": "Amount",
+                "amount": "AMount",
             },
             inplace=True,
         )
