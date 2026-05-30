@@ -41,9 +41,12 @@ def process_file(filepath: Path, daily_dir: Path, dst_dir: Path):
             inplace=True,
         )
 
-        # merge优化：用map代替merge
-        adj_map = df_day.set_index("TradeDate")["Adj_factor"]
-        df_min["Adj_factor"] = df_min["TradeDate"].map(adj_map)
+        df_min = pd.merge(
+            df_min,
+            df_day[["TradeDate", "Adj_factor"]],
+            on="TradeDate",
+            how="inner"
+        )
 
         # 插入Instrument
         df_min.insert(0, "Instrument", instrument_id)
