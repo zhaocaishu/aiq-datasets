@@ -40,7 +40,6 @@ HEADER = [
     "Down_limit",
     "Mfd_inflow_vol_ratio",
     "Mfd_large_amount_ratio",
-    "Q_dt_roe",
     "Mkt_class",
     "Ind_class_l1",
     "Ind_class_l2",
@@ -135,11 +134,7 @@ class ExportCodeData(object):
                         (moneyflow.buy_lg_amount + moneyflow.buy_elg_amount +
                         moneyflow.sell_lg_amount + moneyflow.sell_elg_amount),
                         0
-                    ) AS mfd_large_amount_ratio,
-
-                    -- 财务指标（对齐到交易日）
-                    fina.q_dt_roe,
-                    fina.profit_dedt
+                    ) AS mfd_large_amount_ratio
 
                 FROM ts_quotation_daily daily
 
@@ -158,38 +153,6 @@ class ExportCodeData(object):
                 JOIN ts_quotation_moneyflow moneyflow
                     ON daily.ts_code = moneyflow.ts_code
                 AND daily.trade_date = moneyflow.trade_date
-
-                JOIN (
-                    SELECT
-                        ts_code,
-                        trade_date,
-                        q_dt_roe,
-                        profit_dedt
-                    FROM (
-                        SELECT
-                            d.ts_code,
-                            d.trade_date,
-                            f.q_dt_roe,
-                            f.profit_dedt,
-                            ROW_NUMBER() OVER (
-                                PARTITION BY d.ts_code, d.trade_date
-                                ORDER BY f.ann_date DESC, f.end_date DESC
-                            ) AS rn
-                        FROM ts_quotation_daily d
-                        LEFT JOIN ts_financial_fina_indicator f
-                            ON d.ts_code = f.ts_code
-                        AND f.ann_date <= d.trade_date
-                        AND f.update_flag = 1
-                        AND (
-                            f.q_dt_roe IS NOT NULL
-                            OR f.profit_dedt IS NOT NULL
-                        )
-                        WHERE d.ts_code = '{code}'
-                    ) t
-                    WHERE rn = 1
-                ) fina
-                    ON fina.ts_code = daily.ts_code
-                AND fina.trade_date = daily.trade_date
 
                 WHERE daily.ts_code = '{code}'
                 LIMIT 50000;
