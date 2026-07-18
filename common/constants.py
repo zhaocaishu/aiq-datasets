@@ -54,28 +54,78 @@ INDEX_CONS_COLUMN_MAP = {
     "交易日期": "trade_date",
 }
 
-# 股票日内特征表名
-QUOTATION_INTRADAY_TABLE_NAME = "ts_quotation_intraday_daily"
+# 指数日行情表名
+INDEX_DAILY_TABLE_NAME = "ths_idx_index_daily"
 
-# 股票日内特征表DDL
-QUOTATION_INTRADAY_TABLE_DDL = """
-CREATE TABLE ts_quotation_intraday_daily (
-  ts_code varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '股票代码',
+# 指数日行情表DDL
+INDEX_DAILY_TABLE_DDL = """
+CREATE TABLE ths_idx_index_daily (
+  index_code varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '指数代码',
   trade_date varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '交易日期',
-  tail_ratio float DEFAULT NULL COMMENT '尾盘成交占比',
-  returns_skewness float DEFAULT NULL COMMENT '收益率偏度',
-  price_vol_corr float DEFAULT NULL COMMENT '量价相关度',
-  downside_ratio float DEFAULT NULL COMMENT '下行波动占比',
-  UNIQUE KEY uni_ts_code_trade_date (ts_code,trade_date)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='股票日内特征'
+
+  pre_close decimal(20,6) DEFAULT NULL COMMENT '前收盘价',
+  open decimal(20,6) DEFAULT NULL COMMENT '开盘价',
+  high decimal(20,6) DEFAULT NULL COMMENT '最高价',
+  low decimal(20,6) DEFAULT NULL COMMENT '最低价',
+  close decimal(20,6) DEFAULT NULL COMMENT '收盘价',
+  pct_chg decimal(20,10) DEFAULT NULL COMMENT '涨跌幅',
+
+  vol bigint DEFAULT NULL COMMENT '成交量',
+  amount decimal(30,6) DEFAULT NULL COMMENT '成交金额',
+  turnover_rate decimal(20,10) DEFAULT NULL COMMENT '换手率',
+  turnover_rate_f decimal(20,10) DEFAULT NULL COMMENT '换手率（自由流通股本）',
+  swing decimal(20,10) DEFAULT NULL COMMENT '振幅',
+
+  up_days int DEFAULT NULL COMMENT '连涨天数',
+  down_days int DEFAULT NULL COMMENT '连跌天数',
+
+  constituent_raise_number int DEFAULT NULL COMMENT '指数成份上涨数量',
+  constituent_fall_number int DEFAULT NULL COMMENT '指数成份下跌数量',
+  constituent_up_number int DEFAULT NULL COMMENT '指数成份涨停数量',
+  constituent_dl_number int DEFAULT NULL COMMENT '指数成份跌停数量',
+
+  constituent_chg_ratio_aa decimal(20,10) DEFAULT NULL COMMENT '指数成份平均涨跌幅',
+  constituent_chg_ratio_m decimal(20,10) DEFAULT NULL COMMENT '指数成份涨跌幅中位数',
+
+  new_high_num int DEFAULT NULL COMMENT '指数成份新高家数',
+  new_low_num int DEFAULT NULL COMMENT '指数成份新低家数',
+
+  up_num_ratio decimal(20,10) DEFAULT NULL COMMENT '涨停成份数量占比',
+  over250_avgclose_num_ratio decimal(20,10) DEFAULT NULL COMMENT '站上250日均线的成份数量占比',
+  raise_num_ratio decimal(20,10) DEFAULT NULL COMMENT '上涨成份数量占比',
+
+  UNIQUE KEY uni_index_code_trade_date (index_code, trade_date),
+  KEY idx_trade_date (trade_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='指数日行情及技术指标'
 """
 
-# 股票日内特征字段映射
-QUOTATION_INTRADAY_COLUMN_MAP = {
-    "ts_code": "ts_code",
-    "trade_date": "trade_date",
-    "tail_ratio": "tail_ratio",
-    "returns_skewness": "returns_skewness",
-    "price_vol_corr": "price_vol_corr",
-    "downside_ratio": "downside_ratio",
+
+# 指数日行情表字段映射
+INDEX_DAILY_COLUMN_MAP = {
+    "thscode": "index_code",
+    "time": "trade_date",
+    "ths_pre_close_index": "pre_close",
+    "ths_open_price_index": "open",
+    "ths_high_price_index": "high",
+    "ths_low_index": "low",
+    "ths_close_price_index": "close",
+    "ths_chg_ratio_index": "pct_chg",
+    "ths_vol_index": "vol",
+    "ths_trans_amt_index": "amount",
+    "ths_turnover_ratio_index": "turnover_rate",
+    "ths_free_turnover_ratio_index": "turnover_rate_f",
+    "ths_swing_index": "swing",
+    "ths_up_days_index": "up_days",
+    "ths_down_days_index": "down_days",
+    "ths_constituent_raise_number_index": "constituent_raise_number",
+    "ths_constituent_fall_number_index": "constituent_fall_number",
+    "ths_constituent_up_number_index": "constituent_up_number",
+    "ths_constituent_dl_number_index": "constituent_dl_number",
+    "ths_constituent_chg_ratio_aa_index": "constituent_chg_ratio_aa",
+    "ths_constituent_chg_ratio_m_index": "constituent_chg_ratio_m",
+    "ths_new_high_num_index": "new_high_num",
+    "ths_new_low_num_index": "new_low_num",
+    "ths_up_num_ratio_index": "up_num_ratio",
+    "ths_over250_avgclose_num_ratio_hb_index": "over250_avgclose_num_ratio",
+    "ths_raise_num_ratio_index": "raise_num_ratio",
 }

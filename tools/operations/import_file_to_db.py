@@ -3,8 +3,8 @@ import pandas as pd
 from sqlalchemy import create_engine
 
 from common.constants import (
-    QUOTATION_VWAP_COLUMN_MAP,
-    QUOTATION_VWAP_TABLE_NAME,
+    INDEX_DAILY_COLUMN_MAP,
+    INDEX_DAILY_TABLE_NAME,
 )
 
 # 配置常量
@@ -44,5 +44,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="上传文件到数据库表")
     parser.add_argument("--src_file", required=True, type=str, help="input file")
     args = parser.parse_args()
-    df = load_local_file(args.src_file, QUOTATION_VWAP_COLUMN_MAP)
-    save_to_table(df, QUOTATION_VWAP_TABLE_NAME, DB_URI)
+    df = load_local_file(args.src_file, INDEX_DAILY_COLUMN_MAP)
+    save_to_table(df, INDEX_DAILY_TABLE_NAME, DB_URI)

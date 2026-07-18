@@ -9,7 +9,7 @@ import requests
 class ThsIndexFetcher:
     """同花顺 iFind 指数特征数据增量抓取器"""
 
-    def __init__(self, token, codes, output_file="index_features.csv"):
+    def __init__(self, token, codes, output_file):
         self.url = "https://quantapi.51ifind.com/api/v1/date_sequence"
         self.headers = {"Content-Type": "application/json", "access_token": token}
         self.codes = codes
@@ -180,7 +180,7 @@ def main():
         "--end", type=str, default="2025-12", help="结束月份 (格式: YYYY-MM)"
     )
     parser.add_argument(
-        "--output", type=str, default="/Users/darren/Downloads/ths-data/index_features.csv", help="输出的 CSV 文件名"
+        "--output", type=str, default="/Users/darren/Downloads/ths-data/ths_idx_index_daily.csv", help="输出的 CSV 文件名"
     )
     parser.add_argument(
         "--codes",
@@ -191,7 +191,7 @@ def main():
     parser.add_argument(
         "--token",
         type=str,
-        default="f46d81e03125a1300d76e69a0aabb8c9488d5e31.signs_ODYxOTMxOTE4",
+        default="0c16f1f1c62cbc39c78d7410c64fad1ee8438cab.signs_ODg2NDc3Mjky",
         help="iFind API 访问 Token",
     )
 
