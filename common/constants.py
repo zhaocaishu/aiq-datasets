@@ -79,6 +79,7 @@ CREATE TABLE ths_idx_index_daily (
   up_days int DEFAULT NULL COMMENT '连涨天数',
   down_days int DEFAULT NULL COMMENT '连跌天数',
 
+  constituent_number int DEFAULT NULL COMMENT '指数成份股数量',
   constituent_raise_number int DEFAULT NULL COMMENT '指数成份上涨数量',
   constituent_fall_number int DEFAULT NULL COMMENT '指数成份下跌数量',
   constituent_up_number int DEFAULT NULL COMMENT '指数成份涨停数量',
@@ -117,6 +118,7 @@ INDEX_DAILY_COLUMN_MAP = {
     "ths_swing_index": "swing",
     "ths_up_days_index": "up_days",
     "ths_down_days_index": "down_days",
+    "ths_constituent_num_index": "constituent_number",
     "ths_constituent_raise_number_index": "constituent_raise_number",
     "ths_constituent_fall_number_index": "constituent_fall_number",
     "ths_constituent_up_number_index": "constituent_up_number",

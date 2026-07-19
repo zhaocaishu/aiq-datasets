@@ -30,6 +30,7 @@ class ThsIndexFetcher:
             {"indicator": "ths_swing_index", "indiparams": [""]},
             {"indicator": "ths_up_days_index", "indiparams": [""]},
             {"indicator": "ths_down_days_index", "indiparams": [""]},
+            {"indicator": "ths_constituent_num_index", "indiparams": [""]},
             {"indicator": "ths_constituent_raise_number_index", "indiparams": [""]},
             {"indicator": "ths_constituent_fall_number_index", "indiparams": [""]},
             {"indicator": "ths_constituent_up_number_index", "indiparams": [""]},
@@ -180,7 +181,10 @@ def main():
         "--end", type=str, default="2025-12", help="结束月份 (格式: YYYY-MM)"
     )
     parser.add_argument(
-        "--output", type=str, default="/Users/darren/Downloads/ths-data/ths_idx_index_daily.csv", help="输出的 CSV 文件名"
+        "--output",
+        type=str,
+        default="/Users/darren/Downloads/ths-data/ths_idx_index_daily.csv",
+        help="输出的 CSV 文件名",
     )
     parser.add_argument(
         "--codes",
