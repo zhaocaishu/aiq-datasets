@@ -8,15 +8,31 @@ import mysql.connector
 HEADER = [
     "Instrument",
     "Date",
-    "Close",
+    "Pre_Close",
     "Open",
     "High",
     "Low",
-    "Pre_Close",
-    "Change",
+    "Close",
     "Pct_Chg",
     "Volume",
-    "AMount",
+    "Amount",
+    "Turnover_rate",
+    "Turnover_rate_f",
+    "Swing",
+    "Up_Days",
+    "Down_Days",
+    "Constituent_Number",
+    "Constituent_Raise_Number",
+    "Constituent_Fall_Number",
+    "Constituent_Up_Number",
+    "Constituent_Dl_Number",
+    "Constituent_Chg_Ratio_Aa",
+    "Constituent_Chg_Ratio_M",
+    "New_High_Num",
+    "New_Low_Num",
+    "Up_Num_Ratio",
+    "Over250_Avgclose_Num_Ratio",
+    "Raise_Num_Ratio",
 ]
 
 
@@ -47,14 +63,11 @@ class ExportCodeData(object):
 
         # 上市的全部指数代码
         codes = [
-            "000903.SH",
             "000300.SH",
+            "000852.SH",
+            "000903.SH",
             "000905.SH",
             "000906.SH",
-            "000852.SH",
-            "000985.SH",
-            "399370.SZ",
-            "399371.SZ",
         ]
 
         # 从数据库导出数据
@@ -65,7 +78,7 @@ class ExportCodeData(object):
             with self.connection.cursor() as cursor:
                 # 查询数据
                 query = (
-                    "SELECT * FROM ts_idx_index_daily WHERE index_code = '%s'" % code
+                    "SELECT * FROM ths_idx_index_daily WHERE index_code = '%s'" % code
                 )
 
                 print(query)
@@ -80,10 +93,6 @@ class ExportCodeData(object):
 
                     for row in cursor:
                         list_row = list(row)
-                        t_date = list_row[1]
-                        list_row[1] = (
-                            t_date[0:4] + "-" + t_date[4:6] + "-" + t_date[6:8]
-                        )
                         writer.writerow(list_row)
 
     def close(self):
@@ -123,7 +132,7 @@ if __name__ == "__main__":
 
     export = ExportCodeData(args)
     try:
-        export.export_data(os.path.join(args.save_dir, "features", args.freq))
+        export.export_data(os.path.join(args.save_dir, "features/index", args.freq))
     finally:
         export.close()  # 确保连接被关闭
 

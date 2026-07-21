@@ -172,7 +172,7 @@ class ThsIndexFetcher:
 def main():
     # 命令行参数解析
     parser = argparse.ArgumentParser(
-        description="同花顺 iFind 历史指数特征数据异步按月增量同步工具"
+        description="同花顺iFind历史指数特征数据异步按月增量同步工具"
     )
     parser.add_argument(
         "--start", type=str, default="2025-09", help="开始月份 (格式: YYYY-MM)"
@@ -184,19 +184,19 @@ def main():
         "--output",
         type=str,
         default="/Users/darren/Downloads/ths-data/ths_idx_index_daily.csv",
-        help="输出的 CSV 文件名",
+        help="输出的CSV文件名",
     )
     parser.add_argument(
         "--codes",
         type=str,
-        default="000300.SH,000905.SH,000906.SH",
+        default="000300.SH,000852.SH,000903.SH,000905.SH,000906.SH",
         help="待抓取的指数代码，英文逗号分隔",
     )
     parser.add_argument(
         "--token",
         type=str,
         default="0c16f1f1c62cbc39c78d7410c64fad1ee8438cab.signs_ODg2NDc3Mjky",
-        help="iFind API 访问 Token",
+        help="iFind API访问Token",
     )
 
     args = parser.parse_args()
