@@ -15,7 +15,7 @@ HEADER = [
     "Close",
     "Pct_Chg",
     "Volume",
-    "Amount",
+    "AMount",
     "Turnover_rate",
     "Turnover_rate_f",
     "Swing",
@@ -64,7 +64,6 @@ class ExportCodeData(object):
         # 上市的全部指数代码
         codes = [
             "000300.SH",
-            "000852.SH",
             "000903.SH",
             "000905.SH",
             "000906.SH",
