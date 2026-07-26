@@ -67,6 +67,7 @@ class ExportCodeData(object):
             "000903.SH",
             "000905.SH",
             "000906.SH",
+            "000852.SH",
         ]
 
         # 从数据库导出数据
